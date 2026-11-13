@@ -1,6 +1,6 @@
 // my data entry sheet :]
 // theme values: Basic, Gold, Candy, Galaxy, Gem, Holofoil, Cube, Rift, Quack, Cheat, hacker, bounty, reaper, treat
-const baseSprites = [
+let baseSprites = [
     { id: "water_basic", name: "Water", theme: "Basic", rarity: "Rare", unreleased: false, season: "Runners" },
     { id: "water_gold", name: "Water", theme: "Gold", rarity: "Rare", unreleased: false, season: "Runners" },
     { id: "water_candy", name: "Water", theme: "Candy", rarity: "Rare", unreleased: false, season: "Runners" },

@@ -4,6 +4,8 @@
     <meta name="description" content="Track, manage, and share your Fortnite Sprites collection progress.">
     <title>Rick's Tracker</title>
     <link rel="icon" type="image/png" href="images/staticsprite.png">
+    <link rel="apple-touch-icon" href="images/staticsprite.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/staticsprite.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&amp;display=swap" rel="stylesheet">
@@ -140,6 +142,22 @@
                                 <input type="checkbox" id="showUnreleased">
                             </label>
                             <p class="settings-desc">Shows unreleased sprites that haven't come out yet.</p>
+                        </div>
+                        <div class="settings-section">
+                            <label class="settings-label">Sprite list source</label>
+                            <p class="settings-desc">Locked to spritechecklist.org for automatic updates.</p>
+                            <input type="hidden" id="spriteListUrl" value="https://spritechecklist.org">
+                            <label class="switch settings-switch">
+                                <span>Auto-update on load</span>
+                                <input type="checkbox" id="spriteListAuto">
+                            </label>
+                            <div class="settings-actions-row">
+                                <button type="button" class="btn settings-action-btn" id="spriteListUpdateBtn"><span class="dot dot-backup"></span>Update now</button>
+                                <button type="button" class="btn settings-action-btn" id="spriteListImportBtn"><span class="dot dot-text"></span>Import JSON</button>
+                            </div>
+                            <input type="file" id="spriteListImportInput" class="file-input" accept=".json,application/json">
+                            <p class="settings-desc" id="spriteListStatus">Using built-in sprite list.</p>
+                            <p class="settings-desc">Point this at a JSON file containing an array of sprite objects (or { "sprites": [...] }). Images are still loaded from this site's sprites/ folder by id.</p>
                         </div>
                         <hr class="dropdown-divider">
                         <div class="settings-section">

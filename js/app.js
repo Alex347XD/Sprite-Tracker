@@ -17,6 +17,12 @@ const KEYS = {
 };
 
 const REDEEMED_KEY = 'fn_redeemed_codes';
+const SPRITE_LIST_URL_KEY = 'fn_sprite_list_url';
+const SPRITE_LIST_AUTO_KEY = 'fn_sprite_list_auto';
+const SPRITE_LIST_CACHE_KEY = 'fn_sprite_list_cache';
+const SPRITE_LIST_UPDATED_KEY = 'fn_sprite_list_updated';
+const SPRITE_LIST_API_KEY_KEY = 'fn_sprite_list_api_key';
+let spriteListInitialized = false;
 
 const THEME_ORDER = ['Basic', 'Gold', 'Candy', 'Galaxy', 'Gem', 'Holofoil', 'Cube', 'Rift', 'Quack', 'Cheat', 'Hacker', 'Bounty', 'Reaper', 'Tricktreat', 'Fortune', 'Cursed'];
 const RARITY_ORDER = ['Rare', 'Epic', 'Legendary', 'Mythic'];
@@ -101,6 +107,12 @@ const dom = {
     settingsExportBackupBtn: document.getElementById('settingsExportBackupBtn'),
     settingsImportBtn: document.getElementById('settingsImportBtn'),
     importInput: document.getElementById('importInput'),
+    spriteListUrl: document.getElementById('spriteListUrl'),
+    spriteListAuto: document.getElementById('spriteListAuto'),
+    spriteListUpdateBtn: document.getElementById('spriteListUpdateBtn'),
+    spriteListStatus: document.getElementById('spriteListStatus'),
+    spriteListImportInput: document.getElementById('spriteListImportInput'),
+    spriteListImportBtn: document.getElementById('spriteListImportBtn'),
 };
 
 /* ===================================================
@@ -232,6 +244,307 @@ function checkUnredeemedCodes() {
 
     if (codesBtn) {
         codesBtn.classList.toggle('btn-hack-active', hasUncollectedReward);
+    }
+}
+
+/* ===================================================
+   Sprite List Source
+   =================================================== */
+
+function normalizeSpriteList(data) {
+    let list = data;
+    if (!Array.isArray(list)) {
+        if (data && Array.isArray(data.sprites)) list = data.sprites;
+        else if (data && Array.isArray(data.data)) list = data.data;
+        else if (data && Array.isArray(data.items)) list = data.items;
+        else if (data && Array.isArray(data.results)) list = data.results;
+        else return null;
+    }
+
+    const sprites = [];
+    const seen = new Set();
+    for (const item of list) {
+        if (!item || typeof item !== 'object') continue;
+        const id = String(item.id || '').trim();
+        const name = String(item.name || '').trim();
+        const theme = String(item.theme || '').trim();
+        const rarity = String(item.rarity || '').trim();
+        if (!id || !name || !theme || !rarity) continue;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        sprites.push({
+            id,
+            name,
+            theme,
+            rarity,
+            unreleased: item.unreleased === true,
+            season: typeof item.season === 'string' && item.season.trim() ? item.season.trim() : 'Unknown',
+            code: item.code === true,
+            codeLocked: typeof item.codeLocked === 'boolean' ? item.codeLocked : undefined,
+            cheatCodeExempt: item.cheatCodeExempt === true,
+        });
+    }
+    return sprites.length ? sprites : null;
+}
+
+function readCachedSpriteList() {
+    try {
+        const raw = localStorage.getItem(SPRITE_LIST_CACHE_KEY);
+        if (!raw) return null;
+        return normalizeSpriteList(JSON.parse(raw));
+    } catch {
+        return null;
+    }
+}
+
+function cacheSpriteList(sprites) {
+    try {
+        localStorage.setItem(SPRITE_LIST_CACHE_KEY, JSON.stringify(sprites));
+        localStorage.setItem(SPRITE_LIST_UPDATED_KEY, String(Date.now()));
+    } catch (err) {
+        console.warn('Unable to cache sprite list.', err);
+    }
+}
+
+function getSpriteListSourceUrl() {
+    return 'https://spritechecklist.org';
+}
+
+function setSpriteListSourceUrl(url) {
+    const clean = String(url || '').trim();
+    if (clean) localStorage.setItem(SPRITE_LIST_URL_KEY, clean);
+    else localStorage.removeItem(SPRITE_LIST_URL_KEY);
+}
+
+function getSpriteListAutoUpdate() {
+    return localStorage.getItem(SPRITE_LIST_AUTO_KEY) !== 'false';
+}
+
+function setSpriteListAutoUpdate(value) {
+    localStorage.setItem(SPRITE_LIST_AUTO_KEY, value ? 'true' : 'false');
+}
+
+function setSpriteListStatus(message) {
+    if (dom.spriteListStatus) dom.spriteListStatus.textContent = message;
+}
+
+function syncSpriteListSettingsUI() {
+    if (dom.spriteListUrl) dom.spriteListUrl.value = getSpriteListSourceUrl();
+    if (dom.spriteListAuto) dom.spriteListAuto.checked = getSpriteListAutoUpdate();
+}
+
+function spriteChecklistVariantToTheme(variant) {
+    const map = {
+        basic: 'Basic',
+        fortune: 'Fortune',
+        cursed: 'Cursed',
+        jeweled: 'Gem',
+        gem: 'Gem',
+    };
+    const key = String(variant || '').toLowerCase();
+    return map[key] || key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+async function fetchSpriteChecklistSprites(url) {
+    const origin = new URL(url).origin;
+    const pages = url.includes('/season-4')
+        ? [{ path: '/season-4', season: 'Override' }]
+        : url.includes('/season-3')
+            ? [{ path: '/season-3', season: 'Runners' }]
+            : [
+                { path: '', season: null },
+                { path: '/season-4', season: 'Override' },
+                { path: '/season-3', season: 'Runners' },
+            ];
+
+    const sprites = [];
+    for (const page of pages) {
+        const response = await fetch(origin + page.path, { cache: 'no-store' });
+        if (!response.ok) continue;
+        const html = await response.text();
+
+        let season = page.season;
+        if (!season) {
+            const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+            const title = titleMatch ? titleMatch[1] : '';
+            if (/Override/i.test(title)) season = 'Override';
+            else if (/Runners/i.test(title)) season = 'Runners';
+            else season = 'Treasure Hunters';
+        }
+
+        const wrapperMatch = html.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
+        if (!wrapperMatch) continue;
+        const wrapperResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
+        if (!wrapperResponse.ok) continue;
+        const wrapperText = await wrapperResponse.text();
+        const originalMatch = wrapperText.match(/\.\/Tracker\.[A-Za-z0-9_-]+\.js/) || wrapperText.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
+        if (!originalMatch) continue;
+        const originalFile = originalMatch[0].replace(/^\.\//, '');
+        const bundleResponse = await fetch(origin + '/_astro/' + originalFile, { cache: 'no-store' });
+        let bundle = '';
+        if (bundleResponse.ok) bundle = await bundleResponse.text();
+        if (!bundle.includes('hs=[')) {
+            const directResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
+            if (directResponse.ok) {
+                const directText = await directResponse.text();
+                if (directText.includes('hs=[')) bundle = directText;
+            }
+        }
+        if (!bundle.includes('hs=[')) continue;
+
+        const hsIdx = bundle.indexOf('hs=[');
+        if (hsIdx === -1) continue;
+        const seasonIdx = bundle.indexOf('seasonId', hsIdx);
+        const endIdx = seasonIdx === -1 ? bundle.indexOf('}]', hsIdx) : bundle.lastIndexOf('}]', seasonIdx);
+        if (endIdx === -1) continue;
+        const arrText = bundle.slice(hsIdx + 3, endIdx + 2);
+
+        const ieMatch = bundle.match(/ie=(\\[[^\\]]*\\])/);
+        const csMatch = bundle.match(/cs=(\\[[^\\]]*\\])/);
+        const ie = ieMatch ? JSON.parse(ieMatch[1]) : ['Basic', 'Fortune', 'Cursed'];
+        const cs = csMatch ? JSON.parse(csMatch[1]) : ['Basic', 'Fortune'];
+
+        let entries;
+        try {
+            entries = new Function('const ie = ' + JSON.stringify(ie) + '; const cs = ' + JSON.stringify(cs) + '; return ' + arrText)();
+        } catch (err) {
+            console.warn('Failed to parse spritechecklist bundle', err);
+            continue;
+        }
+        if (!Array.isArray(entries)) continue;
+
+        for (const entry of entries) {
+            if (!entry || !entry.released) continue;
+            const themes = Array.isArray(entry.themes) ? entry.themes : ['Basic', 'Fortune', 'Cursed'];
+            const releasedThemes = Array.isArray(entry.releasedThemes)
+                ? entry.releasedThemes
+                : (entry.released ? cs : []);
+            const releasedSet = new Set(releasedThemes);
+
+            for (const theme of themes) {
+                if (!releasedSet.has(theme)) continue;
+                const variant = theme.toLowerCase();
+                sprites.push({
+                    id: `${entry.id}_${variant}`,
+                    name: entry.name,
+                    theme: theme.charAt(0).toUpperCase() + theme.slice(1).toLowerCase(),
+                    rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
+                    unreleased: false,
+                    season,
+                    code: false,
+                    cheatCodeExempt: false,
+                });
+            }
+        }
+    }
+
+    const normalized = normalizeSpriteList(sprites);
+    if (!normalized) throw new Error('No sprites found on spritechecklist.org');
+    return normalized;
+}
+
+async function fetchSpriteList(url, timeoutMs = 8000) {
+    if (!url) throw new Error('No sprite list URL configured.');
+
+    let parsed;
+    try { parsed = new URL(url); } catch { throw new Error('Invalid URL'); }
+
+    if (parsed.hostname.includes('spritechecklist.org')) {
+        return fetchSpriteChecklistSprites(url);
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const sprites = normalizeSpriteList(data);
+        if (!sprites) throw new Error('Invalid sprite list format');
+        return sprites;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function applySpriteList(sprites, options = {}) {
+    if (!Array.isArray(sprites) || !sprites.length) return false;
+    baseSprites = sprites;
+
+    const validIds = getSpriteIdSet();
+    if (spriteListInitialized) {
+        state.obtained = uniqueValidIds(state.obtained, validIds);
+        state.mastered = uniqueValidIds(state.mastered, validIds)
+            .filter(id => state.obtained.includes(id));
+        saveCollection();
+        populateThemeFilter();
+        applyStateToDOM();
+        renderGrid();
+        checkUnredeemedCodes();
+    }
+
+    if (!options.silent) {
+        toast(`Sprite list updated (${sprites.length} sprites).`, 'success');
+    }
+    return true;
+}
+
+async function updateSpriteListFromSource(options = {}) {
+    const url = options.url || getSpriteListSourceUrl();
+    if (url) setSpriteListSourceUrl(url);
+    const targetUrl = getSpriteListSourceUrl();
+    if (!targetUrl) {
+        setSpriteListStatus('No sprite list URL configured.');
+        if (!options.silent) toast('Enter a sprite list URL first.', 'error');
+        return false;
+    }
+
+    setSpriteListStatus('Updating sprite list...');
+    try {
+        const sprites = await fetchSpriteList(targetUrl);
+        cacheSpriteList(sprites);
+        const applied = applySpriteList(sprites, { silent: options.silent });
+        if (applied) {
+            const updated = localStorage.getItem(SPRITE_LIST_UPDATED_KEY);
+            setSpriteListStatus(`Updated ${updated ? new Date(Number(updated)).toLocaleString() : 'just now'} (${sprites.length} sprites).`);
+        }
+        return applied;
+    } catch (err) {
+        const cached = readCachedSpriteList();
+        if (cached) {
+            applySpriteList(cached, { silent: true });
+            setSpriteListStatus(`Update failed (${err.message}); using cached list.`);
+        } else {
+            setSpriteListStatus(`Update failed: ${err.message}`);
+        }
+        if (!options.silent) toast(`Sprite list update failed: ${err.message}`, 'error');
+        return false;
+    }
+}
+
+async function prepareSpriteList() {
+    const cached = readCachedSpriteList();
+    if (cached) {
+        applySpriteList(cached, { silent: true });
+    }
+
+    if (getSpriteListAutoUpdate()) {
+        const url = getSpriteListSourceUrl();
+        if (url) {
+            try {
+                const sprites = await fetchSpriteList(url);
+                cacheSpriteList(sprites);
+                applySpriteList(sprites, { silent: true });
+                setSpriteListStatus(`Updated ${new Date().toLocaleString()} (${sprites.length} sprites).`);
+            } catch (err) {
+                if (cached) setSpriteListStatus(`Using cached list (${err.message}).`);
+                else setSpriteListStatus(`Built-in list in use (${err.message}).`);
+            }
+        } else {
+            setSpriteListStatus('Using built-in sprite list.');
+        }
+    } else {
+        setSpriteListStatus(cached ? 'Using cached sprite list.' : 'Using built-in sprite list.');
     }
 }
 
@@ -1818,6 +2131,58 @@ function bindEvents() {
         reader.readAsText(file);
     });
 
+    if (dom.spriteListUrl) {
+        dom.spriteListUrl.addEventListener('change', () => {
+            setSpriteListSourceUrl(dom.spriteListUrl.value);
+        });
+        dom.spriteListUrl.addEventListener('blur', () => {
+            setSpriteListSourceUrl(dom.spriteListUrl.value);
+        });
+    }
+
+    if (dom.spriteListAuto) {
+        dom.spriteListAuto.addEventListener('change', () => {
+            setSpriteListAutoUpdate(dom.spriteListAuto.checked);
+            setSpriteListStatus(dom.spriteListAuto.checked ? 'Auto-update enabled.' : 'Auto-update disabled.');
+        });
+    }
+
+    if (dom.spriteListUpdateBtn) {
+        dom.spriteListUpdateBtn.addEventListener('click', () => {
+            if (dom.spriteListUrl) setSpriteListSourceUrl(dom.spriteListUrl.value);
+            updateSpriteListFromSource({ silent: false });
+        });
+    }
+
+    if (dom.spriteListImportBtn && dom.spriteListImportInput) {
+        dom.spriteListImportBtn.addEventListener('click', () => {
+            dom.spriteListImportInput.click();
+        });
+    }
+
+    if (dom.spriteListImportInput) {
+        dom.spriteListImportInput.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    const sprites = normalizeSpriteList(data);
+                    if (!sprites) throw new Error('Invalid sprite list format');
+                    cacheSpriteList(sprites);
+                    applySpriteList(sprites, { silent: false });
+                    setSpriteListStatus(`Imported ${sprites.length} sprites from file.`);
+                } catch (err) {
+                    toast('Failed to import sprite list: invalid JSON', 'error');
+                    console.error(err);
+                }
+                dom.spriteListImportInput.value = '';
+            };
+            reader.readAsText(file);
+        });
+    }
+
     dom.copyTradeTextBtn.addEventListener('click', () => {
         copyText(generateTradeText(), 'Trade list copied to clipboard!', 'Failed to copy trade list');
         setDropdownOpen(dom.copyDropdown, dom.copyToggle, false);
@@ -1938,11 +2303,13 @@ function applyMigrationPayload(data) {
     saveCollection();
 }
 
-function init() {
+async function init() {
     if (typeof baseSprites === 'undefined') {
         console.error('baseSprites is not defined.');
         return;
     }
+
+    await prepareSpriteList();
 
     const params = new URLSearchParams(location.search);
     const shareCode = params.get('c');
@@ -1969,11 +2336,15 @@ function init() {
         }
     }
 
+    spriteListInitialized = true;
     populateThemeFilter();
     applyStateToDOM();
     renderGrid();
     bindEvents();
     checkUnredeemedCodes();
+    syncSpriteListSettingsUI();
 }
 
-init();
+init().catch(err => {
+    console.error(err);
+});
