@@ -472,19 +472,6 @@ async function fetchSpriteChecklistSprites(url) {
             }
         }
 
-    const riftSprites = [
-        { id: 'earth_rift', name: 'Earth', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'fire_rift', name: 'Fire', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'fishy_rift', name: 'Fishy', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'dream_rift', name: 'Dream', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'punk_rift', name: 'Punk', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'boss_rift', name: 'Boss', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'grim_rift', name: 'Grim', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'batman_rift', name: 'Batman', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'zeropoint_rift', name: 'Zero Point', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-    ];
-    for (const rs of riftSprites) sprites.push(rs);
-
     const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
     return normalized;
@@ -716,8 +703,15 @@ function getFamilyKey(sprite) {
     return sprite.id.split('_')[0];
 }
 
+const EXTRA_VALID_SPRITE_IDS = new Set([
+    'earth_rift', 'fire_rift', 'fishy_rift', 'dream_rift', 'punk_rift',
+    'boss_rift', 'grim_rift', 'batman_rift', 'zeropoint_rift',
+]);
+
 function getSpriteIdSet(sprites = baseSprites) {
-    return new Set(sprites.map(sprite => sprite.id));
+    const ids = new Set(sprites.map(sprite => sprite.id));
+    for (const id of EXTRA_VALID_SPRITE_IDS) ids.add(id);
+    return ids;
 }
 
 function getReleasedSprites() {
