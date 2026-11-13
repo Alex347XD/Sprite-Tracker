@@ -355,6 +355,13 @@ async function fetchSpriteChecklistSprites(url) {
     for (const s of sourceSprites) {
         if (s && typeof s.id === 'string') unreleasedMap[s.id] = s.unreleased === true;
     }
+    // Sprites that are known to be unreleased but may still appear in the
+    // upstream spritechecklist data.
+    const knownUnreleased = [
+        'fire_gem', 'air_gem', 'duck_rift', 'ghost_gem', 'demon_rift', 'demon_holofoil',
+        'king_rift', 'king_gem', 'dream_gem', 'punk_gem', 'punk_holofoil', 'boss_gem', 'seven_gem',
+    ];
+    for (const id of knownUnreleased) unreleasedMap[id] = true;
     const response = await fetch(origin + '/', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const html = await response.text();
@@ -509,7 +516,15 @@ async function fetchSpriteList(url, timeoutMs = 8000) {
 
 function applySpriteList(sprites, options = {}) {
     if (!Array.isArray(sprites) || !sprites.length) return false;
-    baseSprites = sprites;
+    const seen = new Set();
+    const unique = [];
+    for (const s of sprites) {
+        if (!s || typeof s.id !== 'string') continue;
+        if (seen.has(s.id)) continue;
+        seen.add(s.id);
+        unique.push(s);
+    }
+    baseSprites = unique.length ? unique : sprites;
 
     const validIds = getSpriteIdSet();
     if (spriteListInitialized) {
