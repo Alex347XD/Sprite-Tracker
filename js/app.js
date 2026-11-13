@@ -282,6 +282,7 @@ function normalizeSpriteList(data) {
             code: item.code === true,
             codeLocked: typeof item.codeLocked === 'boolean' ? item.codeLocked : undefined,
             cheatCodeExempt: item.cheatCodeExempt === true,
+            image: typeof item.image === 'string' && item.image.trim() ? item.image.trim() : undefined,
         });
     }
     return sprites.length ? sprites : null;
@@ -347,38 +348,18 @@ function spriteChecklistVariantToTheme(variant) {
 
 async function fetchSpriteChecklistSprites(url) {
     const origin = new URL(url).origin;
-    const pages = url.includes('/season-4')
-        ? [{ path: '/season-4', season: 'Override' }]
-        : url.includes('/season-3')
-            ? [{ path: '/season-3', season: 'Runners' }]
-            : [
-                { path: '', season: null },
-                { path: '/season-4', season: 'Override' },
-                { path: '/season-3', season: 'Runners' },
-            ];
-
     const sprites = [];
-    for (const page of pages) {
-        const response = await fetch(origin + page.path, { cache: 'no-store' });
-        if (!response.ok) continue;
-        const html = await response.text();
+    const response = await fetch(origin + '/', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const html = await response.text();
 
-        let season = page.season;
-        if (!season) {
-            const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-            const title = titleMatch ? titleMatch[1] : '';
-            if (/Override/i.test(title)) season = 'Override';
-            else if (/Runners/i.test(title)) season = 'Runners';
-            else season = 'Treasure Hunters';
-        }
-
-        const wrapperMatch = html.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
-        if (!wrapperMatch) continue;
+    const wrapperMatch = html.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
+        if (!wrapperMatch) throw new Error('Tracker bundle not found');
         const wrapperResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
-        if (!wrapperResponse.ok) continue;
+        if (!wrapperResponse.ok) throw new Error(`HTTP ${wrapperResponse.status}`);
         const wrapperText = await wrapperResponse.text();
         const originalMatch = wrapperText.match(/\.\/Tracker\.[A-Za-z0-9_-]+\.js/) || wrapperText.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
-        if (!originalMatch) continue;
+        if (!originalMatch) throw new Error('Tracker data bundle not found');
         const originalFile = originalMatch[0].replace(/^\.\//, '');
         const bundleResponse = await fetch(origin + '/_astro/' + originalFile, { cache: 'no-store' });
         let bundle = '';
@@ -390,53 +371,72 @@ async function fetchSpriteChecklistSprites(url) {
                 if (directText.includes('hs=[')) bundle = directText;
             }
         }
-        if (!bundle.includes('hs=[')) continue;
+        if (!bundle.includes('hs=[')) throw new Error('Sprite data not found');
 
-        const hsIdx = bundle.indexOf('hs=[');
-        if (hsIdx === -1) continue;
-        const seasonIdx = bundle.indexOf('seasonId', hsIdx);
-        const endIdx = seasonIdx === -1 ? bundle.indexOf('}]', hsIdx) : bundle.lastIndexOf('}]', seasonIdx);
-        if (endIdx === -1) continue;
-        const arrText = bundle.slice(hsIdx + 3, endIdx + 2);
+        const overrideThemes = ['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack'];
 
-        const ieMatch = bundle.match(/ie=(\\[[^\\]]*\\])/);
-        const csMatch = bundle.match(/cs=(\\[[^\\]]*\\])/);
-        const ie = ieMatch ? JSON.parse(ieMatch[1]) : ['Basic', 'Fortune', 'Cursed'];
-        const cs = csMatch ? JSON.parse(csMatch[1]) : ['Basic', 'Fortune'];
+        const extractions = [
+            { key: 'ts', season: 'Runners', prefix: '', marker: '],Ne=' },
+            { key: 'ls', season: 'Override', prefix: 's4', marker: '],Ue=' },
+            { key: 'hs', season: 'Treasure Hunters', prefix: 'th', marker: '],ze=' },
+        ];
 
-        let entries;
-        try {
-            entries = new Function('const ie = ' + JSON.stringify(ie) + '; const cs = ' + JSON.stringify(cs) + '; return ' + arrText)();
-        } catch (err) {
-            console.warn('Failed to parse spritechecklist bundle', err);
-            continue;
-        }
-        if (!Array.isArray(entries)) continue;
+        for (const ex of extractions) {
+            const keyIdx = bundle.indexOf(ex.key + '=[');
+            if (keyIdx === -1) continue;
+            const markerIdx = bundle.indexOf(ex.marker, keyIdx);
+            if (markerIdx === -1) continue;
+            const arrTextRaw = bundle.slice(keyIdx + ex.key.length + 1, markerIdx + 1);
+            // Clean up spread syntax and variable references
+            const cleaned = arrTextRaw
+                .replace(/\.\.\.[A-Za-z_$][\w$]*,?/g, '')
+                .replace(/\breleasedThemes:de\b/g, 'releasedThemes:' + JSON.stringify(overrideThemes))
+                .replace(/\bthemes:de\b/g, 'themes:' + JSON.stringify(overrideThemes))
+                .replace(/\breleasedThemes:z\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
+                .replace(/\breleasedThemes:ie\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
+                .replace(/\bthemes:Da\b/g, 'themes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
+                .replace(/\breleasedThemes:cs\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune']));
 
-        for (const entry of entries) {
-            if (!entry || !entry.released) continue;
-            const themes = Array.isArray(entry.themes) ? entry.themes : ['Basic', 'Fortune', 'Cursed'];
-            const releasedThemes = Array.isArray(entry.releasedThemes)
-                ? entry.releasedThemes
-                : (entry.released ? cs : []);
-            const releasedSet = new Set(releasedThemes);
+            const themeMap = {
+                Basic: 'Basic', Gold: 'Gold', Candy: 'Candy', Galaxy: 'Galaxy', Gem: 'Gem',
+                Holofoil: 'Holofoil', Quack: 'Quack', CheatMaster: 'Cheat', LootHacker: 'Hacker',
+                BountyHunter: 'Bounty', TrickOrTreat: 'Tricktreat', Fortune: 'Fortune', Cursed: 'Cursed',
+                Cube: 'Cube', Rift: 'Rift',
+            };
 
-            for (const theme of themes) {
-                if (!releasedSet.has(theme)) continue;
-                const variant = theme.toLowerCase();
-                sprites.push({
-                    id: `${entry.id}_${variant}`,
-                    name: entry.name,
-                    theme: theme.charAt(0).toUpperCase() + theme.slice(1).toLowerCase(),
-                    rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
-                    unreleased: false,
-                    season,
-                    code: false,
-                    cheatCodeExempt: false,
-                });
+            let entries;
+            try {
+                entries = new Function('return ' + cleaned)();
+            } catch (err) {
+                console.warn('Failed to parse spritechecklist bundle', ex.key, err);
+                continue;
+            }
+            if (!Array.isArray(entries)) continue;
+
+            for (const entry of entries) {
+                if (!entry || entry.released === false) continue;
+                const themes = Array.isArray(entry.themes) ? entry.themes : (Array.isArray(entry.releasedThemes) ? entry.releasedThemes : []);
+                const releasedThemes = Array.isArray(entry.releasedThemes) ? entry.releasedThemes : themes;
+                const releasedSet = new Set(releasedThemes);
+
+                for (const theme of themes) {
+                    if (!releasedSet.has(theme)) continue;
+                    const mappedTheme = themeMap[theme] || theme;
+                    const variant = mappedTheme.toLowerCase();
+                    sprites.push({
+                        id: `${entry.id}_${variant}`,
+                        name: entry.name,
+                        theme: mappedTheme,
+                        rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
+                        unreleased: false,
+                        season: ex.season,
+                        code: false,
+                        cheatCodeExempt: false,
+                        image: `https://spritechecklist.org/sprites/${ex.prefix ? ex.prefix + '_' : ''}${entry.id}_${theme.toLowerCase()}.webp`,
+                    });
+                }
             }
         }
-    }
 
     const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
@@ -536,6 +536,7 @@ async function prepareSpriteList() {
                 cacheSpriteList(sprites);
                 applySpriteList(sprites, { silent: true });
                 setSpriteListStatus(`Updated ${new Date().toLocaleString()} (${sprites.length} sprites).`);
+                toast(`Sprite list updated (${sprites.length} sprites).`, 'success');
             } catch (err) {
                 if (cached) setSpriteListStatus(`Using cached list (${err.message}).`);
                 else setSpriteListStatus(`Built-in list in use (${err.message}).`);
@@ -1017,7 +1018,7 @@ function updateCardElement(id) {
 function buildCardHTML(sprite, obtained, mastered) {
     const tagText = sprite.rarity.toUpperCase();
     
-    const imgPath = `sprites/${encodeURIComponent(sprite.id)}.png`;
+    const imgPath = sprite.image || `sprites/${encodeURIComponent(sprite.id)}.png`;
     const safeName = escapeHTML(sprite.name);
     const safeTagText = escapeHTML(tagText);
     const themeLabel = escapeHTML(`${getUiThemeLabel(sprite.theme)} Sprite`.toUpperCase());
@@ -1462,7 +1463,7 @@ function exportImage(mode) {
     const releasedSprites = getExportableSprites();
     const imagesToLoad = [
         { id: 'mascot', src: 'siteimages/staticsprite.png' },
-        ...releasedSprites.map(sprite => ({ id: sprite.id, src: `sprites/${encodeURIComponent(sprite.id)}.png` })),
+        ...releasedSprites.map(sprite => ({ id: sprite.id, src: sprite.image || `sprites/${encodeURIComponent(sprite.id)}.png` })),
     ];
 
     toast('Generating image export...', 'info');
@@ -1973,6 +1974,8 @@ function bindEvents() {
     dom.seasonFilter.addEventListener('change', () => {
         state.filters.season = dom.seasonFilter.value;
         persist(KEYS.season, state.filters.season);
+        state.filters.themes = getActiveThemes(getReleasedSprites());
+        persist(KEYS.themes, state.filters.themes);
         renderThemeCheckboxes();
         renderGrid();
     });
