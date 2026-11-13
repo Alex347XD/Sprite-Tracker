@@ -351,7 +351,8 @@ async function fetchSpriteChecklistSprites(url) {
     const origin = new URL(url).origin;
     const sprites = [];
     const unreleasedMap = {};
-    for (const s of ORIGINAL_BASE_SPRITES) {
+    const sourceSprites = (typeof baseSprites !== 'undefined' && Array.isArray(baseSprites)) ? baseSprites : [];
+    for (const s of sourceSprites) {
         if (s && typeof s.id === 'string') unreleasedMap[s.id] = s.unreleased === true;
     }
     const response = await fetch(origin + '/', { cache: 'no-store' });
