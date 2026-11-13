@@ -423,8 +423,17 @@ async function fetchSpriteChecklistSprites(url) {
                     if (!releasedSet.has(theme)) continue;
                     const mappedTheme = themeMap[theme] || theme;
                     const variant = mappedTheme.toLowerCase();
+                    const idMap = {
+                        halfpeeld: 'halfpeel',
+                        lilsquibbly: 'squibbly',
+                        transpondersnail: 'snail',
+                        liluzivertjr: 'uzi',
+                        lilflacko: 'flacko',
+                    };
+                    const sourceId = entry.id;
+                    const mappedId = idMap[entry.id] || entry.id;
                     sprites.push({
-                        id: `${entry.id}_${variant}`,
+                        id: `${mappedId}_${variant}`,
                         name: entry.name,
                         theme: mappedTheme,
                         rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
@@ -432,7 +441,7 @@ async function fetchSpriteChecklistSprites(url) {
                         season: ex.season,
                         code: false,
                         cheatCodeExempt: false,
-                        image: `https://spritechecklist.org/sprites/${ex.prefix ? ex.prefix + '_' : ''}${entry.id}_${theme.toLowerCase()}.webp`,
+                        image: `https://spritechecklist.org/sprites/${ex.prefix ? ex.prefix + '_' : ''}${sourceId}_${theme.toLowerCase()}.webp`,
                     });
                 }
             }
