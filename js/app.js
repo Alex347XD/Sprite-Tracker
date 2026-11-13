@@ -429,11 +429,23 @@ async function fetchSpriteChecklistSprites(url) {
                         transpondersnail: 'snail',
                         liluzivertjr: 'uzi',
                         lilflacko: 'flacko',
+                        stormscout: 'stormking',
+                        dumpsterdive: 'dumpster',
+                        spookydash: 'dash',
+                        onewishwillow: 'willow',
+                        vinijr: 'vini',
                     };
                     const sourceId = entry.id;
                     const mappedId = idMap[entry.id] || entry.id;
+                    const idSuffixMap = {
+                        Basic: 'basic', Gold: 'gold', Candy: 'candy', Galaxy: 'galaxy', Gem: 'gem',
+                        Holofoil: 'holofoil', Cube: 'cube', Rift: 'rift', Quack: 'quack',
+                        Cheat: 'cheat', Hacker: 'hacker', Bounty: 'bounty', Reaper: 'reaper',
+                        Tricktreat: 'treat', Fortune: 'fortune', Cursed: 'cursed',
+                    };
+                    const idSuffix = idSuffixMap[mappedTheme] || mappedTheme.toLowerCase();
                     sprites.push({
-                        id: `${mappedId}_${variant}`,
+                        id: `${mappedId}_${idSuffix}`,
                         name: entry.name,
                         theme: mappedTheme,
                         rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
@@ -446,6 +458,19 @@ async function fetchSpriteChecklistSprites(url) {
                 }
             }
         }
+
+    const riftSprites = [
+        { id: 'earth_rift', name: 'Earth', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'fire_rift', name: 'Fire', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'fishy_rift', name: 'Fishy', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'dream_rift', name: 'Dream', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'punk_rift', name: 'Punk', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'boss_rift', name: 'Boss', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'grim_rift', name: 'Grim', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'batman_rift', name: 'Batman', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'zeropoint_rift', name: 'Zero Point', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+    ];
+    for (const rs of riftSprites) sprites.push(rs);
 
     const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
