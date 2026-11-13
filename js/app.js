@@ -848,8 +848,11 @@ function updateProgress() {
 
 function filterSprites() {
     const search = state.filters.search.trim().toLowerCase();
+    const seen = new Set();
 
     return baseSprites.filter(sprite => {
+        if (seen.has(sprite.id)) return false;
+        seen.add(sprite.id);
         if (state.settings.hideMastered && isMastered(sprite.id)) return false;
         if (!state.settings.showUnreleased && sprite.unreleased) return false;
         if (state.viewMode && (!isObtained(sprite.id) || sprite.unreleased)) return false;
