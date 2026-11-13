@@ -1292,23 +1292,23 @@ function getExportConfig(mode) {
 
     const configs = {
         collected: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'MY COLLECTION',
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'MY COLLECTION',
             color: '#32cd32', filename: 'fnsprites-collection', emptyMsg: 'No collected sprites to export!',
         },
         missing: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: "I'M LOOKING FOR THESE!",
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: "I'M LOOKING FOR THESE!",
             color: '#ef4444', filename: 'fnsprites-missing', emptyMsg: "You aren't missing any released sprites!",
         },
         unmastered: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'UNMASTERED SPRITES',
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'UNMASTERED SPRITES',
             color: '#00f0ff', filename: 'fnsprites-unmastered', emptyMsg: "You don't have any unmastered sprites!",
         },
         mastered: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'MASTERED SPRITES',
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'MASTERED SPRITES',
             color: '#ffd700', filename: 'fnsprites-mastered', emptyMsg: "You don't have any mastered sprites!",
         },
         trade: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'TRADE CARD',
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'TRADE CARD',
             color: '#ffd700', filename: 'fnsprites-trade-card', emptyMsg: 'No sprites to export!',
         },
     };
