@@ -17,6 +17,7 @@ const KEYS = {
 };
 
 const REDEEMED_KEY = 'fn_redeemed_codes';
+const ORIGINAL_BASE_SPRITES = (typeof baseSprites !== 'undefined' && Array.isArray(baseSprites)) ? baseSprites.slice() : [];
 const SPRITE_LIST_URL_KEY = 'fn_sprite_list_url';
 const SPRITE_LIST_AUTO_KEY = 'fn_sprite_list_auto';
 const SPRITE_LIST_CACHE_KEY = 'fn_sprite_list_cache';
@@ -349,6 +350,10 @@ function spriteChecklistVariantToTheme(variant) {
 async function fetchSpriteChecklistSprites(url) {
     const origin = new URL(url).origin;
     const sprites = [];
+    const unreleasedMap = {};
+    for (const s of ORIGINAL_BASE_SPRITES) {
+        if (s && typeof s.id === 'string') unreleasedMap[s.id] = s.unreleased === true;
+    }
     const response = await fetch(origin + '/', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const html = await response.text();
@@ -449,7 +454,7 @@ async function fetchSpriteChecklistSprites(url) {
                         name: entry.name,
                         theme: mappedTheme,
                         rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
-                        unreleased: false,
+                        unreleased: unreleasedMap[`${mappedId}_${idSuffix}`] === true,
                         season: ex.season,
                         code: false,
                         cheatCodeExempt: false,
@@ -460,15 +465,15 @@ async function fetchSpriteChecklistSprites(url) {
         }
 
     const riftSprites = [
-        { id: 'earth_rift', name: 'Earth', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'fire_rift', name: 'Fire', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'fishy_rift', name: 'Fishy', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'dream_rift', name: 'Dream', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'punk_rift', name: 'Punk', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'boss_rift', name: 'Boss', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'grim_rift', name: 'Grim', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'batman_rift', name: 'Batman', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
-        { id: 'zeropoint_rift', name: 'Zero Point', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false },
+        { id: 'earth_rift', name: 'Earth', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'fire_rift', name: 'Fire', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'fishy_rift', name: 'Fishy', theme: 'Cube', rarity: 'Rare', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'dream_rift', name: 'Dream', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'punk_rift', name: 'Punk', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'boss_rift', name: 'Boss', theme: 'Cube', rarity: 'Legendary', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'grim_rift', name: 'Grim', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'batman_rift', name: 'Batman', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'zeropoint_rift', name: 'Zero Point', theme: 'Cube', rarity: 'Mythic', unreleased: false, season: 'Runners', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
     ];
     for (const rs of riftSprites) sprites.push(rs);
 
