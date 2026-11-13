@@ -20,7 +20,7 @@ const REDEEMED_KEY = 'fn_redeemed_codes';
 const ORIGINAL_BASE_SPRITES = (typeof baseSprites !== 'undefined' && Array.isArray(baseSprites)) ? baseSprites.slice() : [];
 const SPRITE_LIST_URL_KEY = 'fn_sprite_list_url';
 const SPRITE_LIST_AUTO_KEY = 'fn_sprite_list_auto';
-const SPRITE_LIST_CACHE_KEY = 'fn_sprite_list_cache';
+const SPRITE_LIST_CACHE_KEY = 'fn_sprite_list_cache_v2';
 const SPRITE_LIST_UPDATED_KEY = 'fn_sprite_list_updated';
 const SPRITE_LIST_API_KEY_KEY = 'fn_sprite_list_api_key';
 let spriteListInitialized = false;
