@@ -355,128 +355,147 @@ async function fetchSpriteChecklistSprites(url) {
     for (const s of sourceSprites) {
         if (s && typeof s.id === 'string') unreleasedMap[s.id] = s.unreleased === true;
     }
-    // Sprites that are known to be unreleased but may still appear in the
-    // upstream spritechecklist data.
     const knownUnreleased = [
         'fire_gem', 'air_gem', 'duck_rift', 'ghost_gem', 'demon_rift', 'demon_holofoil',
         'king_rift', 'king_gem', 'dream_gem', 'punk_gem', 'punk_holofoil', 'boss_gem', 'seven_gem',
     ];
     for (const id of knownUnreleased) unreleasedMap[id] = true;
+
     const response = await fetch(origin + '/', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const html = await response.text();
 
     const wrapperMatch = html.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
-        if (!wrapperMatch) throw new Error('Tracker bundle not found');
-        const wrapperResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
-        if (!wrapperResponse.ok) throw new Error(`HTTP ${wrapperResponse.status}`);
-        const wrapperText = await wrapperResponse.text();
-        const originalMatch = wrapperText.match(/\.\/Tracker\.[A-Za-z0-9_-]+\.js/) || wrapperText.match(/\/_astro\/Tracker\.[A-Za-z0-9_-]+\.js/);
-        if (!originalMatch) throw new Error('Tracker data bundle not found');
-        const originalFile = originalMatch[0].replace(/^\.\//, '');
-        const bundleResponse = await fetch(origin + '/_astro/' + originalFile, { cache: 'no-store' });
-        let bundle = '';
-        if (bundleResponse.ok) bundle = await bundleResponse.text();
-        if (!bundle.includes('hs=[')) {
-            const directResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
-            if (directResponse.ok) {
-                const directText = await directResponse.text();
-                if (directText.includes('hs=[')) bundle = directText;
+    if (!wrapperMatch) throw new Error('Tracker bundle not found');
+    const wrapperResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
+    if (!wrapperResponse.ok) throw new Error(`HTTP ${wrapperResponse.status}`);
+    const wrapperText = await wrapperResponse.text();
+    const originalMatch = wrapperText.match(/\.\/Tracker\.[A-Za-z0-9_-]+\.js/) || wrapperText.match(/Tracker\.[A-Za-z0-9_-]+\.js/);
+    if (!originalMatch) throw new Error('Tracker data bundle not found');
+    const originalFile = originalMatch[0].replace(/^\.\//, '');
+    const bundleResponse = await fetch(origin + '/_astro/' + originalFile, { cache: 'no-store' });
+    let bundle = '';
+    if (bundleResponse.ok) bundle = await bundleResponse.text();
+    if (!bundle.includes('hs=[')) {
+        const directResponse = await fetch(origin + wrapperMatch[0], { cache: 'no-store' });
+        if (directResponse.ok) {
+            const directText = await directResponse.text();
+            if (directText.includes('hs=[')) bundle = directText;
+        }
+    }
+    if (!bundle.includes('hs=[')) throw new Error('Sprite data not found');
+
+    const seasonIdToName = {
+        c7s3: 'Runners',
+        c7s4: 'Override',
+        th: 'Treasure Hunters',
+    };
+    const seasonIdToPrefix = {
+        c7s3: '',
+        c7s4: 's4',
+        th: 'th',
+    };
+
+    const spriteVarMatches = [...bundle.matchAll(/sprites:([a-zA-Z_$][\w$]*)/g)];
+    const varToSeasonId = {};
+    for (const m of spriteVarMatches) {
+        const varName = m[1];
+        const idx = m.index;
+        const start = bundle.lastIndexOf('{', idx);
+        const end = bundle.indexOf('}', idx);
+        const obj = bundle.slice(start, end + 1);
+        const sidMatch = obj.match(/seasonId:"([^"]+)"/);
+        if (sidMatch) varToSeasonId[varName] = sidMatch[1];
+    }
+    const arrayVars = [...new Set([...bundle.matchAll(/\b([a-zA-Z_$][\w$]*)=\[{id:"/g)].map(m => m[1]))];
+
+    const overrideThemes = ['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack'];
+
+    const themeMap = {
+        Basic: 'Basic', Gold: 'Gold', Candy: 'Candy', Galaxy: 'Galaxy', Gem: 'Gem',
+        Holofoil: 'Holofoil', Quack: 'Quack', CheatMaster: 'Cheat', LootHacker: 'Hacker',
+        BountyHunter: 'Bounty', TrickOrTreat: 'Tricktreat', Fortune: 'Fortune', Cursed: 'Cursed',
+        Cube: 'Cube', Rift: 'Rift',
+    };
+    const idSuffixMap = {
+        Basic: 'basic', Gold: 'gold', Candy: 'candy', Galaxy: 'galaxy', Gem: 'gem',
+        Holofoil: 'holofoil', Cube: 'cube', Rift: 'rift', Quack: 'quack',
+        Cheat: 'cheat', Hacker: 'hacker', Bounty: 'bounty', Reaper: 'reaper',
+        Tricktreat: 'treat', Fortune: 'fortune', Cursed: 'cursed',
+    };
+    const idMap = {
+        halfpeeld: 'halfpeel',
+        lilsquibbly: 'squibbly',
+        transpondersnail: 'snail',
+        liluzivertjr: 'uzi',
+        lilflacko: 'flacko',
+        stormscout: 'stormking',
+        dumpsterdive: 'dumpster',
+        spookydash: 'dash',
+        onewishwillow: 'willow',
+        vinijr: 'vini',
+    };
+
+    for (const varName of arrayVars) {
+        const seasonId = varToSeasonId[varName];
+        if (!seasonId) continue;
+        const season = seasonIdToName[seasonId] || seasonId;
+        const prefix = Object.prototype.hasOwnProperty.call(seasonIdToPrefix, seasonId) ? seasonIdToPrefix[seasonId] : '';
+
+        const keyIdx = bundle.indexOf(varName + '=[');
+        if (keyIdx === -1) continue;
+        const markerIdx = bundle.indexOf('}],', keyIdx);
+        if (markerIdx === -1) continue;
+        const arrTextRaw = bundle.slice(keyIdx + varName.length + 1, markerIdx + 2);
+
+        const cleaned = arrTextRaw
+            .replace(/\.\.\.[A-Za-z_$][\w$]*,?/g, '')
+            .replace(/\breleasedThemes:de\b/g, 'releasedThemes:' + JSON.stringify(overrideThemes))
+            .replace(/\bthemes:de\b/g, 'themes:' + JSON.stringify(overrideThemes))
+            .replace(/\breleasedThemes:z\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
+            .replace(/\breleasedThemes:ie\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
+            .replace(/\bthemes:Da\b/g, 'themes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
+            .replace(/\breleasedThemes:cs\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune']));
+
+        let entries;
+        try {
+            entries = new Function('return ' + cleaned)();
+        } catch (err) {
+            console.warn('Failed to parse spritechecklist bundle', varName, err);
+            continue;
+        }
+        if (!Array.isArray(entries)) continue;
+
+        for (const entry of entries) {
+            if (!entry || entry.released === false) continue;
+            const themes = Array.isArray(entry.themes) ? entry.themes : (Array.isArray(entry.releasedThemes) ? entry.releasedThemes : []);
+            const releasedThemes = Array.isArray(entry.releasedThemes) ? entry.releasedThemes : themes;
+            const releasedSet = new Set(releasedThemes);
+
+            for (const theme of themes) {
+                if (!releasedSet.has(theme)) continue;
+                const mappedTheme = themeMap[theme] || theme;
+                const idSuffix = idSuffixMap[mappedTheme] || mappedTheme.toLowerCase();
+                const mappedId = idMap[entry.id] || entry.id;
+                sprites.push({
+                    id: `${mappedId}_${idSuffix}`,
+                    name: entry.name,
+                    theme: mappedTheme,
+                    rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
+                    unreleased: unreleasedMap[`${mappedId}_${idSuffix}`] === true,
+                    season: season,
+                    code: false,
+                    cheatCodeExempt: false,
+                    image: `https://spritechecklist.org/sprites/${prefix ? prefix + '_' : ''}${entry.id}_${theme.toLowerCase()}.webp`,
+                });
             }
         }
-        if (!bundle.includes('hs=[')) throw new Error('Sprite data not found');
-
-        const overrideThemes = ['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack'];
-
-        const extractions = [
-            { key: 'ts', season: 'Runners', prefix: '', marker: '],Ne=' },
-            { key: 'ls', season: 'Override', prefix: 's4', marker: '],Ue=' },
-            { key: 'hs', season: 'Treasure Hunters', prefix: 'th', marker: '],ze=' },
-        ];
-
-        for (const ex of extractions) {
-            const keyIdx = bundle.indexOf(ex.key + '=[');
-            if (keyIdx === -1) continue;
-            const markerIdx = bundle.indexOf(ex.marker, keyIdx);
-            if (markerIdx === -1) continue;
-            const arrTextRaw = bundle.slice(keyIdx + ex.key.length + 1, markerIdx + 1);
-            // Clean up spread syntax and variable references
-            const cleaned = arrTextRaw
-                .replace(/\.\.\.[A-Za-z_$][\w$]*,?/g, '')
-                .replace(/\breleasedThemes:de\b/g, 'releasedThemes:' + JSON.stringify(overrideThemes))
-                .replace(/\bthemes:de\b/g, 'themes:' + JSON.stringify(overrideThemes))
-                .replace(/\breleasedThemes:z\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
-                .replace(/\breleasedThemes:ie\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
-                .replace(/\bthemes:Da\b/g, 'themes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
-                .replace(/\breleasedThemes:cs\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune']));
-
-            const themeMap = {
-                Basic: 'Basic', Gold: 'Gold', Candy: 'Candy', Galaxy: 'Galaxy', Gem: 'Gem',
-                Holofoil: 'Holofoil', Quack: 'Quack', CheatMaster: 'Cheat', LootHacker: 'Hacker',
-                BountyHunter: 'Bounty', TrickOrTreat: 'Tricktreat', Fortune: 'Fortune', Cursed: 'Cursed',
-                Cube: 'Cube', Rift: 'Rift',
-            };
-
-            let entries;
-            try {
-                entries = new Function('return ' + cleaned)();
-            } catch (err) {
-                console.warn('Failed to parse spritechecklist bundle', ex.key, err);
-                continue;
-            }
-            if (!Array.isArray(entries)) continue;
-
-            for (const entry of entries) {
-                if (!entry || entry.released === false) continue;
-                const themes = Array.isArray(entry.themes) ? entry.themes : (Array.isArray(entry.releasedThemes) ? entry.releasedThemes : []);
-                const releasedThemes = Array.isArray(entry.releasedThemes) ? entry.releasedThemes : themes;
-                const releasedSet = new Set(releasedThemes);
-
-                for (const theme of themes) {
-                    if (!releasedSet.has(theme)) continue;
-                    const mappedTheme = themeMap[theme] || theme;
-                    const variant = mappedTheme.toLowerCase();
-                    const idMap = {
-                        halfpeeld: 'halfpeel',
-                        lilsquibbly: 'squibbly',
-                        transpondersnail: 'snail',
-                        liluzivertjr: 'uzi',
-                        lilflacko: 'flacko',
-                        stormscout: 'stormking',
-                        dumpsterdive: 'dumpster',
-                        spookydash: 'dash',
-                        onewishwillow: 'willow',
-                        vinijr: 'vini',
-                    };
-                    const sourceId = entry.id;
-                    const mappedId = idMap[entry.id] || entry.id;
-                    const idSuffixMap = {
-                        Basic: 'basic', Gold: 'gold', Candy: 'candy', Galaxy: 'galaxy', Gem: 'gem',
-                        Holofoil: 'holofoil', Cube: 'cube', Rift: 'rift', Quack: 'quack',
-                        Cheat: 'cheat', Hacker: 'hacker', Bounty: 'bounty', Reaper: 'reaper',
-                        Tricktreat: 'treat', Fortune: 'fortune', Cursed: 'cursed',
-                    };
-                    const idSuffix = idSuffixMap[mappedTheme] || mappedTheme.toLowerCase();
-                    sprites.push({
-                        id: `${mappedId}_${idSuffix}`,
-                        name: entry.name,
-                        theme: mappedTheme,
-                        rarity: String(entry.rarity || 'Rare').charAt(0).toUpperCase() + String(entry.rarity || 'Rare').slice(1).toLowerCase(),
-                        unreleased: unreleasedMap[`${mappedId}_${idSuffix}`] === true,
-                        season: ex.season,
-                        code: false,
-                        cheatCodeExempt: false,
-                        image: `https://spritechecklist.org/sprites/${ex.prefix ? ex.prefix + '_' : ''}${sourceId}_${theme.toLowerCase()}.webp`,
-                    });
-                }
-            }
-        }
+    }
 
     const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
     return normalized;
 }
-
 async function fetchSpriteList(url, timeoutMs = 8000) {
     if (!url) throw new Error('No sprite list URL configured.');
 
@@ -519,6 +538,7 @@ function applySpriteList(sprites, options = {}) {
         state.mastered = uniqueValidIds(state.mastered, validIds)
             .filter(id => state.obtained.includes(id));
         saveCollection();
+        populateSeasonFilter();
         populateThemeFilter();
         applyStateToDOM();
         renderGrid();
@@ -707,6 +727,38 @@ const EXTRA_VALID_SPRITE_IDS = new Set([
     'earth_rift', 'fire_rift', 'fishy_rift', 'dream_rift', 'punk_rift',
     'boss_rift', 'grim_rift', 'batman_rift', 'zeropoint_rift',
 ]);
+
+function getSeasons(sprites = baseSprites) {
+    return [...new Set(sprites.map(sprite => sprite.season).filter(Boolean))];
+}
+
+function populateSeasonFilter() {
+    if (!dom.seasonFilter) return;
+    const seasons = getSeasons();
+    const preferred = ['Treasure Hunters', 'Override', 'Runners'];
+    const ordered = [...preferred.filter(s => seasons.includes(s)), ...seasons.filter(s => !preferred.includes(s))];
+    const current = state.filters.season;
+    dom.seasonFilter.replaceChildren(
+        ...ordered.map(season => {
+            const option = document.createElement('option');
+            option.value = season;
+            option.textContent = season;
+            return option;
+        }),
+        (() => {
+            const option = document.createElement('option');
+            option.value = 'all';
+            option.textContent = 'All Seasons';
+            return option;
+        })()
+    );
+    if (ordered.includes(current) || current === 'all') {
+        dom.seasonFilter.value = current;
+    } else if (ordered.length) {
+        dom.seasonFilter.value = ordered[0];
+        state.filters.season = ordered[0];
+    }
+}
 
 function getSpriteIdSet(sprites = baseSprites) {
     const ids = new Set(sprites.map(sprite => sprite.id));
@@ -2392,6 +2444,7 @@ async function init() {
     }
 
     spriteListInitialized = true;
+    populateSeasonFilter();
     populateThemeFilter();
     applyStateToDOM();
     renderGrid();
