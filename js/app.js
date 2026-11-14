@@ -896,17 +896,19 @@ function supportsBadges(season) {
 }
 
 function toggleNaturalBadge(id) {
-    if (isNaturalBadge(id)) state.naturalBadges = state.naturalBadges.filter(x => x !== id);
-    else state.naturalBadges.push(id);
+    if (isNaturalBadge(id)) return; // can only be removed by un-collecting the card
+    state.naturalBadges.push(id);
     persist(NATURAL_BADGES_KEY, state.naturalBadges);
     renderGrid();
+    toast('Natural badge on', 'info');
 }
 
 function toggleWonBadge(id) {
-    if (isWonBadge(id)) state.wonBadges = state.wonBadges.filter(x => x !== id);
-    else state.wonBadges.push(id);
+    if (isWonBadge(id)) return; // can only be removed by un-collecting the card
+    state.wonBadges.push(id);
     persist(WON_BADGES_KEY, state.wonBadges);
     renderGrid();
+    toast('Won badge on', 'info');
 }
 
 function escapeHTML(value) {
@@ -1261,11 +1263,7 @@ function toggleObtained(id) {
 
     // Cheat Master sprites show a Hack Available/Unavailable badge that depends
     // on obtained status, so a full re-render is needed to keep that in sync.
-    if (sprite && (sprite.codeLocked === true || sprite.code === true)) {
-        renderGrid();
-    } else {
-        updateCardElement(id);
-    }
+    renderGrid();
     updateProgress();
     checkUnredeemedCodes();
 }

@@ -597,16 +597,16 @@ a { color: var(--mastered); }
     justify-content: center;
     cursor: pointer;
     padding: 1px;
-    opacity: 0;
+    opacity: 1;
     transition: opacity var(--ease), background var(--ease), border-color var(--ease);
 }
 
 .card-badges {
     position: absolute;
-    bottom: 4px;
+    bottom: 34px;
     right: 4px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 4px;
     z-index: 5;
     pointer-events: none;
@@ -620,11 +620,7 @@ a { color: var(--mastered); }
     opacity: 1;
 }
 
-@media (hover: none) {
-    .card.obtained .card-badge-toggle {
-        opacity: 0.85;
-    }
-}
+/* Badge toggles only show on hover (including mobile tap-to-hover) */
 
 .card-badge-toggle:hover {
     background: var(--surface-raised);
