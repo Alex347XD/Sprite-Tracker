@@ -21,6 +21,8 @@ const ORIGINAL_BASE_SPRITES = (typeof baseSprites !== 'undefined' && Array.isArr
 const SPRITE_LIST_URL_KEY = 'fn_sprite_list_url';
 const SPRITE_LIST_AUTO_KEY = 'fn_sprite_list_auto';
 const SPRITE_LIST_CACHE_KEY = 'fn_sprite_list_cache_v2';
+const NATURAL_BADGES_KEY = 'fn_natural_badges';
+const WON_BADGES_KEY = 'fn_won_badges';
 const SPRITE_LIST_UPDATED_KEY = 'fn_sprite_list_updated';
 const SPRITE_LIST_API_KEY_KEY = 'fn_sprite_list_api_key';
 let spriteListInitialized = false;
@@ -58,6 +60,8 @@ const EXPORT_LAYOUT = {
 const state = {
     obtained: [],
     mastered: [],
+    naturalBadges: [],
+    wonBadges: [],
     viewMode: false,
     filters: { search: '', themes: [], season: 'Treasure Hunters', status: 'all' },
     settings: {
@@ -158,6 +162,8 @@ function load() {
     state.obtained = uniqueValidIds(readStoredArray(KEYS.obtained), validIds);
     state.mastered = uniqueValidIds(readStoredArray(KEYS.mastered), validIds)
         .filter(id => state.obtained.includes(id));
+    state.naturalBadges = uniqueValidIds(readStoredArray(NATURAL_BADGES_KEY), validIds);
+    state.wonBadges = uniqueValidIds(readStoredArray(WON_BADGES_KEY), validIds);
     state.filters.search = localStorage.getItem(KEYS.search) || '';
     state.filters.themes = readStoredArray(KEYS.themes);
     state.filters.season = localStorage.getItem(KEYS.season) || 'Treasure Hunters';
@@ -877,6 +883,32 @@ function isMastered(id) {
     return state.mastered.includes(id);
 }
 
+function isNaturalBadge(id) {
+    return state.naturalBadges.includes(id);
+}
+
+function isWonBadge(id) {
+    return state.wonBadges.includes(id);
+}
+
+function supportsBadges(season) {
+    return season !== 'Runners' && season !== 'Override';
+}
+
+function toggleNaturalBadge(id) {
+    if (isNaturalBadge(id)) state.naturalBadges = state.naturalBadges.filter(x => x !== id);
+    else state.naturalBadges.push(id);
+    persist(NATURAL_BADGES_KEY, state.naturalBadges);
+    renderGrid();
+}
+
+function toggleWonBadge(id) {
+    if (isWonBadge(id)) state.wonBadges = state.wonBadges.filter(x => x !== id);
+    else state.wonBadges.push(id);
+    persist(WON_BADGES_KEY, state.wonBadges);
+    renderGrid();
+}
+
 function escapeHTML(value) {
     return String(value).replace(/[&<>'"]/g, char => ({
         '&': '&amp;',
@@ -1158,12 +1190,26 @@ function buildCardHTML(sprite, obtained, mastered) {
         crownDisplay = `<div class="card-crown-display">${CROWN_ICON}</div>`;
     }
 
+    const naturalChecked = isNaturalBadge(sprite.id) ? 'checked' : '';
+    const wonChecked = isWonBadge(sprite.id) ? 'checked' : '';
     return `<div class="card-theme-label"><span>${themeLabel}</span></div>${badge}${crownAction}
         <div class="card-display">
             ${crownDisplay}
+            ${(naturalChecked || wonChecked) && supportsBadges(sprite.season) ? `<div class="card-badge-display">
+                ${naturalChecked ? `<img src="badges/natural.png" alt="natural">` : ''}
+                ${wonChecked ? `<img src="badges/won.png" alt="won">` : ''}
+            </div>` : ''}
             <img src="${imgPath}" alt="${safeName}" loading="lazy">
             <div class="card-rarity">${safeTagText}</div>
         </div>
+        ${obtained && supportsBadges(sprite.season) ? `<div class="card-badges">
+            <button type="button" class="card-badge-toggle natural ${naturalChecked ? 'active' : ''}" data-badge="natural" data-id="${sprite.id}" title="Toggle natural badge">
+                <img src="badges/natural.png" alt="natural" class="card-badge-img">
+            </button>
+            <button type="button" class="card-badge-toggle won ${wonChecked ? 'active' : ''}" data-badge="won" data-id="${sprite.id}" title="Toggle won badge">
+                <img src="badges/won.png" alt="won" class="card-badge-img">
+            </button>
+        </div>` : ''}
         <div class="card-name"><span>${safeName}</span></div>`;
 }
 
@@ -2012,6 +2058,18 @@ function bindEvents() {
     dom.grid.addEventListener('error', (e) => {
         if (e.target.tagName === 'IMG') {
             e.target.style.opacity = '0.2';
+        }
+    }, true);
+
+    dom.grid.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.card-badge-toggle');
+        if (toggle) {
+            e.stopPropagation();
+            e.preventDefault();
+            const id = toggle.dataset.id;
+            if (toggle.dataset.badge === 'natural') toggleNaturalBadge(id);
+            else if (toggle.dataset.badge === 'won') toggleWonBadge(id);
+            return;
         }
     }, true);
 
