@@ -100,6 +100,7 @@ const dom = {
     copyTradeTextBtn: document.getElementById('copyTradeTextBtn'),
     copyTradeGridBtn: document.getElementById('copyTradeGridBtn'),
     copyShareLinkBtn: document.getElementById('copyShareLinkBtn'),
+    shareCollectionBtn: document.getElementById('shareCollectionBtn'),
     collectionRatio: document.getElementById('collectionRatio'),
     collectionFill: document.getElementById('collectionFill'),
     masteryRatio: document.getElementById('masteryRatio'),
@@ -2301,28 +2302,40 @@ function bindEvents() {
         });
     }
 
-    if (dom.copyShareLinkBtn) {
-        dom.copyShareLinkBtn.addEventListener('click', () => {
-            if (state.viewMode) {
-                toast('Cannot share in view-only mode!', 'error');
-                return;
-            }
-            const code = compressCollection(baseSprites, state.obtained, state.mastered);
-            const url = `${location.origin}${location.pathname}?c=${code}`;
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(() => {
-                    toast('Share link copied to clipboard!', 'success');
-                }).catch(() => {
-                    fallbackCopy(url);
-                    toast('Share link copied to clipboard!', 'success');
-                });
-            } else {
+    function shareCollection() {
+        if (state.viewMode) {
+            toast('Cannot share in view-only mode!', 'error');
+            return;
+        }
+        const code = compressCollection(baseSprites, state.obtained, state.mastered);
+        const url = `${location.origin}${location.pathname}?c=${code}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(() => {
+                toast('Share link copied to clipboard!', 'success');
+            }).catch(() => {
                 fallbackCopy(url);
                 toast('Share link copied to clipboard!', 'success');
-            }
+            });
+        } else {
+            fallbackCopy(url);
+            toast('Share link copied to clipboard!', 'success');
+        }
+    }
+
+    if (dom.copyShareLinkBtn) {
+        dom.copyShareLinkBtn.addEventListener('click', () => {
+            shareCollection();
             setDropdownOpen(dom.copyDropdown, dom.copyToggle, false);
         });
     }
+
+    if (dom.shareCollectionBtn) {
+        dom.shareCollectionBtn.addEventListener('click', () => {
+            shareCollection();
+        });
+    }
+
+
 
     dom.copyTradeTextBtn.addEventListener('click', () => {
         copyText(generateTradeText(), 'Trade list copied to clipboard!', 'Failed to copy trade list');
