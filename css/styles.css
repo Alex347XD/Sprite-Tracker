@@ -209,6 +209,10 @@ a { color: var(--mastered); }
     background: linear-gradient(90deg, #b30000, var(--mastered));
 }
 
+.progress-fill.badges {
+    background: linear-gradient(90deg, #0066ff, #00c6ff);
+}
+
 /* ===================================================
    Toolbar
    =================================================== */

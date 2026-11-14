@@ -109,6 +109,8 @@ const dom = {
     collectionFill: document.getElementById('collectionFill'),
     masteryRatio: document.getElementById('masteryRatio'),
     masteryFill: document.getElementById('masteryFill'),
+    badgeRatio: document.getElementById('badgeRatio'),
+    badgeFill: document.getElementById('badgeFill'),
     settingsDropdown: document.getElementById('settingsDropdown'),
     settingsToggle: document.getElementById('settingsToggle'),
     settingsExportBackupBtn: document.getElementById('settingsExportBackupBtn'),
@@ -950,6 +952,12 @@ function updateProgress() {
     dom.collectionFill.style.width = total > 0 ? `${(collected / total) * 100}%` : '0%';
     dom.masteryRatio.textContent = `${mastered} / ${total}`;
     dom.masteryFill.style.width = total > 0 ? `${(mastered / total) * 100}%` : '0%';
+
+    const badgeSprites = baseSprites.filter(s => supportsBadges(s.season));
+    const badgeTotal = badgeSprites.length * 2;
+    const badgeCount = state.naturalBadges.length + state.wonBadges.length;
+    if (dom.badgeRatio) dom.badgeRatio.textContent = `${badgeCount} / ${badgeTotal}`;
+    if (dom.badgeFill) dom.badgeFill.style.width = badgeTotal > 0 ? `${(badgeCount / badgeTotal) * 100}%` : '0%';
 }
 
 /* ===================================================
