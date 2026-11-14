@@ -422,7 +422,7 @@ async function fetchSpriteChecklistSprites(url) {
     };
     const idSuffixMap = {
         Basic: 'basic', Gold: 'gold', Candy: 'candy', Galaxy: 'galaxy', Gem: 'gem',
-        Holofoil: 'holofoil', Cube: 'cube', Rift: 'rift', Quack: 'quack',
+        Holofoil: 'holofoil', Cube: 'rift', Rift: 'rift', Quack: 'quack',
         Cheat: 'cheat', Hacker: 'hacker', Bounty: 'bounty', Reaper: 'reaper',
         Tricktreat: 'treat', Fortune: 'fortune', Cursed: 'cursed',
     };
