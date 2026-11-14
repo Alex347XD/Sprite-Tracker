@@ -350,6 +350,7 @@ function spriteChecklistVariantToTheme(variant) {
 async function fetchSpriteChecklistSprites(url) {
     const origin = new URL(url).origin;
     const sprites = [];
+    const warnings = [];
     const unreleasedMap = {};
     const sourceSprites = (typeof baseSprites !== 'undefined' && Array.isArray(baseSprites)) ? baseSprites : [];
     for (const s of sourceSprites) {
@@ -453,6 +454,8 @@ async function fetchSpriteChecklistSprites(url) {
             .replace(/\breleasedThemes:de\b/g, 'releasedThemes:' + JSON.stringify(overrideThemes))
             .replace(/\bthemes:de\b/g, 'themes:' + JSON.stringify(overrideThemes))
             .replace(/\breleasedThemes:z\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
+            .replace(/\breleasedThemes:he\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack']))
+            .replace(/\bthemes:he\b/g, 'themes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack']))
             .replace(/\breleasedThemes:ie\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
             .replace(/\bthemes:Da\b/g, 'themes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
             .replace(/\breleasedThemes:cs\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune']));
@@ -461,6 +464,7 @@ async function fetchSpriteChecklistSprites(url) {
         try {
             entries = new Function('return ' + cleaned)();
         } catch (err) {
+            warnings.push(`${varName}: ${err.message}`);
             console.warn('Failed to parse spritechecklist bundle', varName, err);
             continue;
         }
@@ -492,6 +496,9 @@ async function fetchSpriteChecklistSprites(url) {
         }
     }
 
+    if (sprites.length < 200) {
+        throw new Error('Incomplete sprite list (' + sprites.length + '): ' + (warnings.join('; ') || 'missing seasons'));
+    }
     const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
     return normalized;
