@@ -676,11 +676,7 @@ function compressCollection(sprites, obtained, mastered, naturalBadges = [], won
     const naturalCode = encodeBits(naturalBits);
     const wonCode = encodeBits(wonBits);
 
-    const parts = [obtainedCode];
-    if (masteredCode) parts.push(masteredCode);
-    if (naturalCode) parts.push(naturalCode);
-    if (wonCode) parts.push(wonCode);
-    return parts.join('~');
+    return [obtainedCode, masteredCode, naturalCode, wonCode].join('~');
 }
 
 function decompressCollection(sprites, code) {
