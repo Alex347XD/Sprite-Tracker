@@ -319,7 +319,7 @@ function setSpriteListSourceUrl(url) {
 }
 
 function getSpriteListAutoUpdate() {
-    return localStorage.getItem(SPRITE_LIST_AUTO_KEY) !== 'false';
+    return true;
 }
 
 function setSpriteListAutoUpdate(value) {
