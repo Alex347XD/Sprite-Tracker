@@ -1869,7 +1869,7 @@ function exportImage(mode) {
         ctx.font = 'bold 16px "Oswald", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('rickventure.com', canvasW / 2, canvasH - layout.border - layout.footerH / 2);
+        ctx.fillText('alex347xd.github.io/Sprite-Tracker/', canvasW / 2, canvasH - layout.border - layout.footerH / 2);
 
         const shouldOpenInNewTab = isIOS() || state.settings.openExports;
         
