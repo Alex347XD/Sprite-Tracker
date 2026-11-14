@@ -456,6 +456,7 @@ async function fetchSpriteChecklistSprites(url) {
             .replace(/\breleasedThemes:z\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
             .replace(/\breleasedThemes:he\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack']))
             .replace(/\bthemes:he\b/g, 'themes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack']))
+            .replace(/\breleasedThemes:q\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
             .replace(/\breleasedThemes:ie\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
             .replace(/\bthemes:Da\b/g, 'themes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
             .replace(/\breleasedThemes:cs\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune']));
