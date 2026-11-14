@@ -1302,24 +1302,24 @@ function getExportConfig(mode) {
 
     const configs = {
         collected: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'MY COLLECTION',
-            color: '#32cd32', filename: 'fnsprites-collection', emptyMsg: 'No collected sprites to export!',
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'MY COLLECTION',
+            color: '#ff4d4d', filename: 'fnsprites-collection', emptyMsg: 'No collected sprites to export!',
         },
         missing: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: "I'M LOOKING FOR THESE!",
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: "I'M LOOKING FOR THESE!",
             color: '#ef4444', filename: 'fnsprites-missing', emptyMsg: "You aren't missing any released sprites!",
         },
         unmastered: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'UNMASTERED SPRITES',
-            color: '#00f0ff', filename: 'fnsprites-unmastered', emptyMsg: "You don't have any unmastered sprites!",
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'UNMASTERED SPRITES',
+            color: '#ff3333', filename: 'fnsprites-unmastered', emptyMsg: "You don't have any unmastered sprites!",
         },
         mastered: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'MASTERED SPRITES',
-            color: '#ffd700', filename: 'fnsprites-mastered', emptyMsg: "You don't have any mastered sprites!",
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'MASTERED SPRITES',
+            color: '#cc0000', filename: 'fnsprites-mastered', emptyMsg: "You don't have any mastered sprites!",
         },
         trade: {
-            items, titleL1: 'RICK\'S TRACKER:', titleL2: 'TRADE CARD',
-            color: '#ffd700', filename: 'fnsprites-trade-card', emptyMsg: 'No sprites to export!',
+            items, titleL1: 'ALEX\'S TRACKER:', titleL2: 'TRADE CARD',
+            color: '#ff0000', filename: 'fnsprites-trade-card', emptyMsg: 'No sprites to export!',
         },
     };
 
@@ -1708,8 +1708,8 @@ function exportImage(mode) {
         let borderGrad;
         if (mode === 'trade') {
             borderGrad = ctx.createLinearGradient(0, 0, canvasW, canvasH);
-            borderGrad.addColorStop(0, '#ffd700');
-            borderGrad.addColorStop(1, '#22c55e');
+            borderGrad.addColorStop(0, '#ff0000');
+            borderGrad.addColorStop(1, '#8b0000');
             ctx.fillStyle = borderGrad;
         } else {
             ctx.fillStyle = config.color;

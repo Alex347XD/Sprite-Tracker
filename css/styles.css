@@ -3,24 +3,24 @@
 }
 
 :root {
-    --bg: #0b0d14;
-    --surface: #141720;
-    --surface-raised: #1a1e2a;
-    --surface-overlay: #222738;
+    --bg: #140606;
+    --surface: #1f0a0a;
+    --surface-raised: #2a1010;
+    --surface-overlay: #3a1616;
 
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.16);
-    --border-focus: rgba(0, 180, 255, 0.5);
+    --border: rgba(255, 80, 80, 0.12);
+    --border-hover: rgba(255, 100, 100, 0.25);
+    --border-focus: rgba(255, 60, 60, 0.6);
 
-    --text: #e4e7ef;
-    --text-soft: #8891a5;
-    --text-muted: #555d72;
+    --text: #f5e6e6;
+    --text-soft: #c9a0a0;
+    --text-muted: #8a5555;
 
-    --collected: #22c55e;
+    --collected: #ff4d4d;
     --mastered: #ffd700;
-    --missing: #ef4444;
-    --unmastered: #00d4ff;
-    --unreleased-color: #ef4444;
+    --missing: #ff6b6b;
+    --unmastered: #ff3333;
+    --unreleased-color: #ff0000;
 
     --rare: #004A8E;
     --rare-deep: #081a35;
@@ -52,7 +52,7 @@
 
 body {
     min-height: 100vh;
-    background: radial-gradient(ellipse at 50% 0%, #161f30 0%, var(--bg) 70%);
+    background: radial-gradient(ellipse at 50% 0%, #3a0f0f 0%, var(--bg) 70%);
     color: var(--text);
     font-family: 'Oswald', system-ui, sans-serif;
     font-weight: 400;
@@ -130,7 +130,7 @@ a { color: var(--mastered); }
     justify-content: space-between;
     gap: var(--gap-lg);
     padding-bottom: var(--gap);
-    border-bottom: 2px solid var(--border-hover);
+    border-bottom: 2px solid var(--collected);
     margin-bottom: var(--gap);
     flex-wrap: wrap;
 }
@@ -206,7 +206,7 @@ a { color: var(--mastered); }
 }
 
 .progress-fill.mastery {
-    background: linear-gradient(90deg, #e6b800, var(--mastered));
+    background: linear-gradient(90deg, #b30000, var(--mastered));
 }
 
 /* ===================================================
@@ -347,13 +347,13 @@ a { color: var(--mastered); }
 .btn:hover { background: var(--surface-overlay); border-color: var(--border-hover); }
 
 .btn-accent {
-    background: rgba(34, 197, 94, 0.15);
+    background: rgba(255, 77, 77, 0.15);
     border-color: var(--collected);
     color: var(--collected);
 }
 
 .btn-accent:hover {
-    background: rgba(34, 197, 94, 0.25);
+    background: rgba(255, 77, 77, 0.25);
 }
 
 /* ── Export Dropdown ── */
