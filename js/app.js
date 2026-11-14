@@ -658,49 +658,67 @@ function decodeBits(code) {
     return bits;
 }
 
-function compressCollection(sprites, obtained, mastered) {
+function compressCollection(sprites, obtained, mastered, naturalBadges = [], wonBadges = []) {
     let obtainedBits = '';
     let masteredBits = '';
-    
+    let naturalBits = '';
+    let wonBits = '';
+
     sprites.forEach(s => {
         obtainedBits += obtained.includes(s.id) ? '1' : '0';
         masteredBits += mastered.includes(s.id) ? '1' : '0';
+        naturalBits += naturalBadges.includes(s.id) ? '1' : '0';
+        wonBits += wonBadges.includes(s.id) ? '1' : '0';
     });
 
     const obtainedCode = encodeBits(obtainedBits);
     const masteredCode = encodeBits(masteredBits);
+    const naturalCode = encodeBits(naturalBits);
+    const wonCode = encodeBits(wonBits);
 
-    if (!masteredCode) {
-        return obtainedCode;
-    }
-    return `${obtainedCode}~${masteredCode}`;
+    const parts = [obtainedCode];
+    if (masteredCode) parts.push(masteredCode);
+    if (naturalCode) parts.push(naturalCode);
+    if (wonCode) parts.push(wonCode);
+    return parts.join('~');
 }
 
 function decompressCollection(sprites, code) {
-    if (!code) return { obtained: [], mastered: [] };
-    
+    if (!code) return { obtained: [], mastered: [], naturalBadges: [], wonBadges: [] };
+
     const parts = code.split('~');
-    if (parts.length > 2) {
-        return { obtained: [], mastered: [] };
+    if (parts.length > 4) {
+        return { obtained: [], mastered: [], naturalBadges: [], wonBadges: [] };
     }
 
-    const obtainedCode = parts[0];
+    const obtainedCode = parts[0] || '';
     const masteredCode = parts[1] || '';
+    const naturalCode = parts[2] || '';
+    const wonCode = parts[3] || '';
 
-    if (!/^[A-Za-z0-9\-_]*$/.test(obtainedCode) || !/^[A-Za-z0-9\-_]*$/.test(masteredCode)) {
-        return { obtained: [], mastered: [] };
+    if (!/^[A-Za-z0-9\-_]*$/.test(obtainedCode) ||
+        !/^[A-Za-z0-9\-_]*$/.test(masteredCode) ||
+        !/^[A-Za-z0-9\-_]*$/.test(naturalCode) ||
+        !/^[A-Za-z0-9\-_]*$/.test(wonCode)) {
+        return { obtained: [], mastered: [], naturalBadges: [], wonBadges: [] };
     }
 
     try {
         const obtainedBits = decodeBits(obtainedCode);
         const masteredBits = decodeBits(masteredCode);
+        const naturalBits = decodeBits(naturalCode);
+        const wonBits = decodeBits(wonCode);
 
         const obtained = [];
         const mastered = [];
+        const naturalBadges = [];
+        const wonBadges = [];
 
         sprites.forEach((s, idx) => {
             const isObtained = obtainedBits[idx] === '1';
             const isMastered = masteredBits[idx] === '1';
+            const isNatural = naturalBits[idx] === '1';
+            const isWon = wonBits[idx] === '1';
 
             if (isObtained) {
                 obtained.push(s.id);
@@ -708,11 +726,13 @@ function decompressCollection(sprites, code) {
                     mastered.push(s.id);
                 }
             }
+            if (isNatural) naturalBadges.push(s.id);
+            if (isWon) wonBadges.push(s.id);
         });
 
-        return { obtained, mastered };
+        return { obtained, mastered, naturalBadges, wonBadges };
     } catch {
-        return { obtained: [], mastered: [] };
+        return { obtained: [], mastered: [], naturalBadges: [], wonBadges: [] };
     }
 }
 
@@ -896,6 +916,7 @@ function supportsBadges(season) {
 }
 
 function toggleNaturalBadge(id) {
+    if (state.viewMode) return;
     if (isNaturalBadge(id)) return; // can only be removed by un-collecting the card
     state.naturalBadges.push(id);
     persist(NATURAL_BADGES_KEY, state.naturalBadges);
@@ -904,6 +925,7 @@ function toggleNaturalBadge(id) {
 }
 
 function toggleWonBadge(id) {
+    if (state.viewMode) return;
     if (isWonBadge(id)) return; // can only be removed by un-collecting the card
     state.wonBadges.push(id);
     persist(WON_BADGES_KEY, state.wonBadges);
@@ -1204,7 +1226,7 @@ function buildCardHTML(sprite, obtained, mastered) {
             <img src="${imgPath}" alt="${safeName}" loading="lazy">
             <div class="card-rarity">${safeTagText}</div>
         </div>
-        ${obtained && supportsBadges(sprite.season) ? `<div class="card-badges">
+        ${!state.viewMode && obtained && supportsBadges(sprite.season) ? `<div class="card-badges">
             ${!naturalChecked ? `<button type="button" class="card-badge-toggle natural" data-badge="natural" data-id="${sprite.id}" title="Toggle natural badge">
                 <img src="badges/natural.png" alt="natural" class="card-badge-img">
             </button>` : ''}
@@ -2249,6 +2271,8 @@ function bindEvents() {
             obtained: state.obtained,
             mastered: state.mastered,
             redeemed,
+            naturalBadges: state.naturalBadges,
+            wonBadges: state.wonBadges,
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -2289,6 +2313,10 @@ function bindEvents() {
 
                 state.obtained = obtained;
                 state.mastered = mastered;
+                state.naturalBadges = Array.isArray(data.naturalBadges) ? uniqueValidIds(data.naturalBadges, validIds) : state.naturalBadges;
+                state.wonBadges = Array.isArray(data.wonBadges) ? uniqueValidIds(data.wonBadges, validIds) : state.wonBadges;
+                persist(NATURAL_BADGES_KEY, state.naturalBadges);
+                persist(WON_BADGES_KEY, state.wonBadges);
                 saveCollection();
 
                 if (Array.isArray(data.redeemed) && typeof baseCodes !== 'undefined') {
@@ -2367,7 +2395,7 @@ function bindEvents() {
             toast('Cannot share in view-only mode!', 'error');
             return;
         }
-        const code = compressCollection(baseSprites, state.obtained, state.mastered);
+        const code = compressCollection(baseSprites, state.obtained, state.mastered, state.naturalBadges, state.wonBadges);
         const url = `${location.origin}${location.pathname}?c=${code}`;
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url).then(() => {
@@ -2534,6 +2562,8 @@ async function init() {
         const decoded = decompressCollection(baseSprites, shareCode);
         state.obtained = decoded.obtained;
         state.mastered = decoded.mastered;
+        state.naturalBadges = decoded.naturalBadges || [];
+        state.wonBadges = decoded.wonBadges || [];
         if (dom.viewBanner) dom.viewBanner.hidden = false;
     } else {
         load();
