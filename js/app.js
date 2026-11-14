@@ -32,7 +32,7 @@ const SORT_METHODS = ['theme', 'sprite', 'name', 'rarity'];
 const UI_THEME_LABELS = { Candy: 'Gummy', Cheat: 'Cheat Master', Hacker: 'Loot Hacker', Bounty: 'Bounty Hunter', Reaper: 'Reaper', Tricktreat: 'Trick or Treat' };
 const EXPORT_THEME_LABELS = { Basic: 'NORMAL', Candy: 'GUMMY', Hacker: 'LOOT HACKER', Bounty: 'BOUNTY HUNTER', Reaper: 'REAPER', Tricktreat: 'TRICK OR TREAT' };
 const TRADE_THEME_LABELS = { Basic: 'Base', Candy: 'Gummy', Hacker: 'Loot Hacker', Bounty: 'Bounty Hunter', Reaper: 'Reaper', Tricktreat: 'Trick or Treat' };
-const TRACKER_URL = 'https://rickventure.com';
+const TRACKER_URL = 'https://alex347xd.github.io/Sprite-Tracker/';
 const CROWN_ICON = '<svg class="crown-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 19h20v2H2v-2zM2 5l5 3.5L12 2l5 6.5L22 5v12H2V5z"/></svg>';
 
 const EXPORT_LAYOUT = {
