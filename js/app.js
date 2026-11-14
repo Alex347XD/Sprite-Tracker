@@ -596,9 +596,11 @@ async function prepareSpriteList() {
             try {
                 const sprites = await fetchSpriteList(url);
                 cacheSpriteList(sprites);
+                const seasonCounts = sprites.reduce((acc, s) => { acc[s.season] = (acc[s.season] || 0) + 1; return acc; }, {});
+                const summary = Object.entries(seasonCounts).map(([k, v]) => `${k}: ${v}`).join(', ');
                 applySpriteList(sprites, { silent: true });
-                setSpriteListStatus(`Updated ${new Date().toLocaleString()} (${sprites.length} sprites).`);
-                toast(`Sprite list updated (${sprites.length} sprites).`, 'success');
+                setSpriteListStatus(`Updated ${new Date().toLocaleString()} (${sprites.length} sprites: ${summary}).`);
+                toast(`Sprite list updated (${sprites.length} sprites: ${summary}).`, 'success');
             } catch (err) {
                 if (cached) setSpriteListStatus(`Using cached list (${err.message}).`);
                 else setSpriteListStatus(`Built-in list in use (${err.message}).`);
