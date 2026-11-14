@@ -603,8 +603,8 @@ a { color: var(--mastered); }
 
 .card-badges {
     position: absolute;
-    top: 52px;
-    right: 0px;
+    bottom: 4px;
+    right: 4px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -621,7 +621,7 @@ a { color: var(--mastered); }
 }
 
 @media (hover: none) {
-    .card.obtained .card-badges .card-badge-toggle {
+    .card.obtained .card-badge-toggle {
         opacity: 0.85;
     }
 }

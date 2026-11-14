@@ -1203,12 +1203,12 @@ function buildCardHTML(sprite, obtained, mastered) {
             <div class="card-rarity">${safeTagText}</div>
         </div>
         ${obtained && supportsBadges(sprite.season) ? `<div class="card-badges">
-            <button type="button" class="card-badge-toggle natural ${naturalChecked ? 'active' : ''}" data-badge="natural" data-id="${sprite.id}" title="Toggle natural badge">
+            ${!naturalChecked ? `<button type="button" class="card-badge-toggle natural" data-badge="natural" data-id="${sprite.id}" title="Toggle natural badge">
                 <img src="badges/natural.png" alt="natural" class="card-badge-img">
-            </button>
-            <button type="button" class="card-badge-toggle won ${wonChecked ? 'active' : ''}" data-badge="won" data-id="${sprite.id}" title="Toggle won badge">
+            </button>` : ''}
+            ${!wonChecked ? `<button type="button" class="card-badge-toggle won" data-badge="won" data-id="${sprite.id}" title="Toggle won badge">
                 <img src="badges/won.png" alt="won" class="card-badge-img">
-            </button>
+            </button>` : ''}
         </div>` : ''}
         <div class="card-name"><span>${safeName}</span></div>`;
 }
@@ -1250,6 +1250,10 @@ function toggleObtained(id) {
     if (isObtained(id)) {
         state.obtained = state.obtained.filter(x => x !== id);
         state.mastered = state.mastered.filter(x => x !== id);
+        state.naturalBadges = state.naturalBadges.filter(x => x !== id);
+        state.wonBadges = state.wonBadges.filter(x => x !== id);
+        persist(NATURAL_BADGES_KEY, state.naturalBadges);
+        persist(WON_BADGES_KEY, state.wonBadges);
     } else {
         state.obtained.push(id);
     }
