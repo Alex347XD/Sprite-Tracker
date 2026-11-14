@@ -573,7 +573,7 @@ a { color: var(--mastered); }
     position: absolute;
     bottom: 4px;
     right: 4px;
-    z-index: 4;
+    z-index: 6;
     display: flex;
     gap: 2px;
 }
