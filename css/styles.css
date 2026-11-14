@@ -597,7 +597,7 @@ a { color: var(--mastered); }
     justify-content: center;
     cursor: pointer;
     padding: 1px;
-    opacity: 1;
+    opacity: 0;
     transition: opacity var(--ease), background var(--ease), border-color var(--ease);
 }
 
