@@ -771,7 +771,7 @@ function getSeasons(sprites = baseSprites) {
 function populateSeasonFilter() {
     if (!dom.seasonFilter) return;
     const seasons = getSeasons();
-    const preferred = ['Treasure Hunters', 'Override', 'Runners'];
+    const preferred = ['Runners', 'Override', 'Treasure Hunters'];
     const ordered = [...preferred.filter(s => seasons.includes(s)), ...seasons.filter(s => !preferred.includes(s))];
     const current = state.filters.season;
     dom.seasonFilter.replaceChildren(
@@ -995,6 +995,13 @@ function sortSprites(items, method) {
     const sorted = [...items];
     if (method === 'theme') {
         return sorted.sort((a, b) => {
+            if (state.filters.season === 'all') {
+                const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
+                const idxA = seasonOrder.indexOf(a.season);
+                const idxB = seasonOrder.indexOf(b.season);
+                const cmp = (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
+                if (cmp !== 0) return cmp;
+            }
             const idxA = getOrderedIndex(THEME_ORDER, a.theme);
             const idxB = getOrderedIndex(THEME_ORDER, b.theme);
             if (idxA !== idxB) return idxA - idxB;
@@ -1004,10 +1011,22 @@ function sortSprites(items, method) {
         });
     }
     if (method === 'sprite') {
+        const familyOrder = new Map();
+        baseSprites.forEach((sprite, idx) => {
+            const family = getFamilyKey(sprite);
+            if (!familyOrder.has(family)) familyOrder.set(family, idx);
+        });
         return sorted.sort((a, b) => {
+            const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
+            const seasonA = seasonOrder.indexOf(a.season);
+            const seasonB = seasonOrder.indexOf(b.season);
+            const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
+            if (seasonCmp !== 0) return seasonCmp;
             const familyA = getFamilyKey(a);
             const familyB = getFamilyKey(b);
-            if (familyA !== familyB) return familyA.localeCompare(familyB);
+            const orderA = familyOrder.has(familyA) ? familyOrder.get(familyA) : Infinity;
+            const orderB = familyOrder.has(familyB) ? familyOrder.get(familyB) : Infinity;
+            if (orderA !== orderB) return orderA - orderB;
             return getOrderedIndex(THEME_ORDER, a.theme) - getOrderedIndex(THEME_ORDER, b.theme);
         });
     }
@@ -1073,9 +1092,9 @@ function renderThemeCheckboxes() {
 function updateThemeToggleLabel(availableThemes = getActiveThemes(baseSprites)) {
     const selectedCount = state.filters.themes.length;
     if (selectedCount === 0) {
-        dom.themeToggle.textContent = 'No Themes';
+        dom.themeToggle.textContent = 'No Variants';
     } else if (selectedCount >= availableThemes.length) {
-        dom.themeToggle.textContent = 'All Themes';
+        dom.themeToggle.textContent = 'All Variants';
     } else {
         dom.themeToggle.textContent = `${selectedCount} Theme${selectedCount === 1 ? '' : 's'}`;
     }
@@ -1621,6 +1640,19 @@ function drawMiniCard(ctx, sprite, x, y, width, height, cardState, imageMap) {
     }
     ctx.restore();
 
+    // Badge images (natural/won) in the sprite art area, bottom-right
+    const naturalBadge = isNaturalBadge(sprite.id) ? imageMap['badge_natural'] : null;
+    const wonBadge = isWonBadge(sprite.id) ? imageMap['badge_won'] : null;
+    const badgeY = imageAreaY + imageAreaH - 14;
+    let badgeX = x + width - 14;
+    if (wonBadge && wonBadge.width) {
+        ctx.drawImage(wonBadge, badgeX, badgeY, 12, 12);
+        badgeX -= 14;
+    }
+    if (naturalBadge && naturalBadge.width) {
+        ctx.drawImage(naturalBadge, badgeX, badgeY, 12, 12);
+    }
+
     ctx.restore();
 }
 
@@ -1653,6 +1685,8 @@ function exportImage(mode) {
     const releasedSprites = getExportableSprites();
     const imagesToLoad = [
         { id: 'mascot', src: 'siteimages/staticsprite.png' },
+        { id: 'badge_natural', src: 'badges/natural.png' },
+        { id: 'badge_won', src: 'badges/won.png' },
         ...releasedSprites.map(sprite => ({ id: sprite.id, src: sprite.image || `sprites/${encodeURIComponent(sprite.id)}.png` })),
     ];
 
