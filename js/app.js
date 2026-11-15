@@ -969,6 +969,13 @@ function sortSprites(items, method) {
             const family = getFamilyKey(sprite);
             if (!familyOrder.has(family)) familyOrder.set(family, idx);
         });
+        // Manual ordering for newly added sprites
+        if (familyOrder.has('transpondersnail') && !familyOrder.has('minimiku')) {
+            familyOrder.set('minimiku', familyOrder.get('transpondersnail') - 1);
+        }
+        if (!familyOrder.has('zee')) {
+            familyOrder.set('zee', Infinity);
+        }
         return sorted.sort((a, b) => {
             const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
             const seasonA = seasonOrder.indexOf(a.season);
