@@ -471,6 +471,17 @@ async function fetchSpriteChecklistSprites(url) {
     if (sprites.length < 200) {
         throw new Error('Incomplete sprite list (' + sprites.length + '): ' + (warnings.join('; ') || 'missing seasons'));
     }
+    const manualSprites = [
+        { id: 'minimiku_basic', name: 'Mini Miku', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'minimiku_fortune', name: 'Mini Miku', theme: 'Fortune', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'minimiku_cursed', name: 'Mini Miku', theme: 'Cursed', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Rare', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Rare', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Rare', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'zee_basic', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+    ];
+    for (const ms of manualSprites) sprites.push(ms);
+
     const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
     return normalized;
