@@ -111,6 +111,7 @@ const dom = {
     masteryFill: document.getElementById('masteryFill'),
     badgeRatio: document.getElementById('badgeRatio'),
     badgeFill: document.getElementById('badgeFill'),
+    badgeProgressItem: document.getElementById('badgeProgressItem'),
     settingsDropdown: document.getElementById('settingsDropdown'),
     settingsToggle: document.getElementById('settingsToggle'),
     settingsExportBackupBtn: document.getElementById('settingsExportBackupBtn'),
@@ -210,6 +211,10 @@ function applyStateToDOM() {
 
     const statusLabels = { all: 'All', owned: 'Owned', missing: 'Missing' };
     dom.statusToggle.textContent = `Show: ${statusLabels[state.filters.status] || 'All'}`;
+
+    if (dom.badgeProgressItem) {
+        dom.badgeProgressItem.hidden = state.filters.season === 'Runners' || state.filters.season === 'Override';
+    }
     dom.statusMenu.querySelectorAll('[data-status]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.status === state.filters.status);
     });
@@ -2232,6 +2237,9 @@ function bindEvents() {
         persist(KEYS.season, state.filters.season);
         state.filters.themes = getActiveThemes(getReleasedSprites());
         persist(KEYS.themes, state.filters.themes);
+        if (dom.badgeProgressItem) {
+            dom.badgeProgressItem.hidden = state.filters.season === 'Runners' || state.filters.season === 'Override';
+        }
         renderThemeCheckboxes();
         renderGrid();
     });
