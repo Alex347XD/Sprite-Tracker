@@ -16,7 +16,6 @@ const KEYS = {
     season: 'fn_state_season',
 };
 
-const REDEEMED_KEY = 'fn_redeemed_codes';
 const ORIGINAL_BASE_SPRITES = (typeof baseSprites !== 'undefined' && Array.isArray(baseSprites)) ? baseSprites.slice() : [];
 const SPRITE_LIST_URL_KEY = 'fn_sprite_list_url';
 const SPRITE_LIST_AUTO_KEY = 'fn_sprite_list_auto';
@@ -218,49 +217,6 @@ function applyStateToDOM() {
     dom.statusMenu.querySelectorAll('[data-status]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.status === state.filters.status);
     });
-}
-
-function checkUnredeemedCodes() {
-    const notifDot = document.getElementById('codesNotification');
-    const codesBtn = document.getElementById('codesBtn');
-    if (typeof baseCodes === 'undefined') return;
-
-    let showAlerts = true;
-    try {
-        const storedSetting = localStorage.getItem('fn_alert_new_codes');
-        if (storedSetting !== null) {
-            showAlerts = JSON.parse(storedSetting);
-        }
-    } catch {
-        showAlerts = true;
-    }
-
-    if (!showAlerts) {
-        if (notifDot) notifDot.hidden = true;
-        if (codesBtn) codesBtn.classList.remove('btn-hack-active');
-        return;
-    }
-
-    let redeemed = [];
-    try {
-        redeemed = JSON.parse(localStorage.getItem(REDEEMED_KEY)) || [];
-    } catch {
-        redeemed = [];
-    }
-
-    const hasUnredeemed = baseCodes.some(c => c.active && !redeemed.includes(c.code));
-    if (notifDot) notifDot.hidden = !hasUnredeemed;
-
-    const hasUncollectedReward = baseCodes.some(c => 
-        c.active && 
-        !redeemed.includes(c.code) && 
-        c.internalreward && 
-        !isObtained(c.internalreward)
-    );
-
-    if (codesBtn) {
-        codesBtn.classList.toggle('btn-hack-active', hasUncollectedReward);
-    }
 }
 
 /* ===================================================
@@ -565,8 +521,7 @@ function applySpriteList(sprites, options = {}) {
         populateThemeFilter();
         applyStateToDOM();
         renderGrid();
-        checkUnredeemedCodes();
-    }
+        }
 
     if (!options.silent) {
         toast(`Sprite list updated (${sprites.length} sprites).`, 'success');
@@ -824,26 +779,8 @@ function getReleasedSprites() {
 // sprite with `cheatCodeExempt: true` in sprites-data.js (see "crown_cheat")
 // to treat it like a regular sprite instead - no code required, no Hack
 // Available/Unavailable badge, ever.
-function isCodeLocked(sprite) {
-    if (!sprite.codeLocked || sprite.cheatCodeExempt || isObtained(sprite.id)) return false;
-    if (typeof baseCodes === 'undefined') return true;
-    return !baseCodes.some(c => c.active && c.internalreward === sprite.id);
-}
-
-// Same as getReleasedSprites(), but also excludes locked/unavailable Cheat Master
-// sprites (no active code yet) — they're treated like unreleased sprites in exports.
 function getExportableSprites() {
-    return getReleasedSprites().filter(sprite => !isCodeLocked(sprite));
-}
-
-
-
-function getFamilyKeys(sprites = getReleasedSprites()) {
-    return sprites.reduce((keys, sprite) => {
-        const key = getFamilyKey(sprite);
-        if (!keys.includes(key)) keys.push(key);
-        return keys;
-    }, []);
+    return getReleasedSprites();
 }
 
 function getActiveThemes(sprites = getReleasedSprites()) {
@@ -1129,33 +1066,11 @@ function renderGrid() {
     let items = filterSprites();
     items = sortSprites(items, state.settings.sortOrder);
 
-    let redeemed = [];
-    try {
-        redeemed = JSON.parse(localStorage.getItem(REDEEMED_KEY)) || [];
-    } catch {
-        redeemed = [];
-    }
-    const hackableRewards = new Set(
-        baseCodes
-            .filter(c => c.active && !redeemed.includes(c.code) && c.internalreward)
-            .map(c => c.internalreward)
-    );
-    // Every Cheat Master sprite with a currently-active code on the lobby hacks
-    // page, regardless of redeemed status. Recomputed on every render, so
-    // adding new codes to codes-data.js automatically unlocks the matching sprite.
-    const activeCodeRewards = new Set(
-        baseCodes.filter(c => c.active && c.internalreward).map(c => c.internalreward)
-    );
-
     const frag = document.createDocumentFragment();
 
     for (const sprite of items) {
         const obtained = isObtained(sprite.id);
         const mastered = isMastered(sprite.id);
-		const isCodeLockedSprite = sprite.codeLocked === true && !sprite.cheatCodeExempt && !obtained;
-		const hasCodeTag = sprite.code === true && !obtained;
-		const hasHack = (isCodeLockedSprite || hasCodeTag) && hackableRewards.has(sprite.id);
-		const isUnavailable = isCodeLockedSprite && !activeCodeRewards.has(sprite.id);
 
         const card = document.createElement('div');
         card.dataset.id = sprite.id;
@@ -1163,8 +1078,6 @@ function renderGrid() {
         const classes = ['card', `rarity-${sprite.rarity}`, `theme-${sprite.theme}`];
         if (obtained) classes.push('obtained');
         if (mastered) classes.push('mastered');
-        if (hasHack) classes.push('hack-available');
-        if (isUnavailable) classes.push('hack-unavailable');
         card.className = classes.join(' ');
 
         if (!state.viewMode) {
@@ -1174,14 +1087,7 @@ function renderGrid() {
             card.setAttribute('aria-label', `${obtained ? 'Remove' : 'Mark'} ${sprite.name} ${obtained ? 'from' : 'as part of'} your collection`);
         }
 
-        let cardHTML = buildCardHTML(sprite, obtained, mastered);
-        if (hasHack) {
-            cardHTML = `<a href="codes" class="hack-badge hack-available-badge" aria-label="View the lobby hack code for ${escapeHTML(sprite.name)}">Hack Available</a>` + cardHTML;
-        } else if (isUnavailable) {
-            cardHTML = `<div class="hack-badge hack-unavailable-badge">Unavailable</div>` + cardHTML;
-        }
-
-        card.innerHTML = cardHTML;
+        card.innerHTML = buildCardHTML(sprite, obtained, mastered);
         frag.appendChild(card);
     }
 
@@ -1335,7 +1241,6 @@ function toggleObtained(id) {
     // on obtained status, so a full re-render is needed to keep that in sync.
     renderGrid();
     updateProgress();
-    checkUnredeemedCodes();
 }
 
 function toggleMastery(id) {
@@ -2326,17 +2231,9 @@ function bindEvents() {
     });
 
     dom.settingsExportBackupBtn.addEventListener('click', () => {
-        let redeemed = [];
-        try {
-            redeemed = JSON.parse(localStorage.getItem(REDEEMED_KEY)) || [];
-        } catch {
-            redeemed = [];
-        }
-
         const data = {
             obtained: state.obtained,
             mastered: state.mastered,
-            redeemed,
             naturalBadges: state.naturalBadges,
             wonBadges: state.wonBadges,
         };
@@ -2385,15 +2282,9 @@ function bindEvents() {
                 persist(WON_BADGES_KEY, state.wonBadges);
                 saveCollection();
 
-                if (Array.isArray(data.redeemed) && typeof baseCodes !== 'undefined') {
-                    const validCodes = new Set(baseCodes.map(c => c.code));
-                    const redeemed = [...new Set(data.redeemed)].filter(code => validCodes.has(code));
-                    localStorage.setItem(REDEEMED_KEY, JSON.stringify(redeemed));
-                }
 
                 renderGrid();
-                checkUnredeemedCodes();
-                toast('Collection imported successfully!', 'success');
+                            toast('Collection imported successfully!', 'success');
             } catch (err) {
                 toast('Failed to import: invalid JSON format', 'error');
                 console.error(err);
@@ -2652,7 +2543,6 @@ async function init() {
     applyStateToDOM();
     renderGrid();
     bindEvents();
-    checkUnredeemedCodes();
     syncSpriteListSettingsUI();
 }
 
