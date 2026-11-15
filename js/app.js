@@ -1031,7 +1031,14 @@ function sortSprites(items, method) {
         });
     }
     if (method === 'name') {
+        const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
         return sorted.sort((a, b) => {
+            if (state.filters.season === 'all') {
+                const seasonA = seasonOrder.indexOf(a.season);
+                const seasonB = seasonOrder.indexOf(b.season);
+                const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
+                if (seasonCmp !== 0) return seasonCmp;
+            }
             const baseNameA = getCharName(getFamilyKey(a));
             const baseNameB = getCharName(getFamilyKey(b));
             const cmp = baseNameA.localeCompare(baseNameB);
@@ -1040,13 +1047,26 @@ function sortSprites(items, method) {
         });
     }
     if (method === 'rarity') {
+        const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
+        const familyOrder = new Map();
+        baseSprites.forEach((sprite, idx) => {
+            const family = getFamilyKey(sprite);
+            if (!familyOrder.has(family)) familyOrder.set(family, idx);
+        });
         return sorted.sort((a, b) => {
             const idxA = getOrderedIndex(RARITY_ORDER, a.rarity);
             const idxB = getOrderedIndex(RARITY_ORDER, b.rarity);
             if (idxA !== idxB) return idxA - idxB;
+            const seasonA = seasonOrder.indexOf(a.season);
+            const seasonB = seasonOrder.indexOf(b.season);
+            const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
+            if (seasonCmp !== 0) return seasonCmp;
             const themeIdxA = getOrderedIndex(THEME_ORDER, a.theme);
             const themeIdxB = getOrderedIndex(THEME_ORDER, b.theme);
             if (themeIdxA !== themeIdxB) return themeIdxA - themeIdxB;
+            const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
+            const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
+            if (orderA !== orderB) return orderA - orderB;
             return a.name.localeCompare(b.name);
         });
     }
