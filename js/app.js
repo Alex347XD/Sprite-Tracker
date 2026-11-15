@@ -475,9 +475,9 @@ async function fetchSpriteChecklistSprites(url) {
         { id: 'minimiku_basic', name: 'Mini Miku', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'minimiku_fortune', name: 'Mini Miku', theme: 'Fortune', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'minimiku_cursed', name: 'Mini Miku', theme: 'Cursed', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Rare', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Rare', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Rare', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'zee_basic', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
     ];
     for (const ms of manualSprites) sprites.push(ms);
@@ -944,40 +944,67 @@ function filterSprites() {
     });
 }
 
+function getFamilyOrderMap() {
+    const map = new Map();
+    baseSprites.forEach((sprite, idx) => {
+        const family = getFamilyKey(sprite);
+        if (!map.has(family)) map.set(family, idx);
+    });
+    const manualOrder = {
+        halfpeel: 0,
+        repete: 1,
+        barryofish: 2,
+        wayfinder: 3,
+        chester: 4,
+        kelper: 5,
+        exmarks: 6,
+        squibbly: 7,
+        lilsquibbly: 7,
+        squiplash: 8,
+        flacko: 9,
+        lilflacko: 9,
+        liluzivertjr: 10,
+        uzi: 10,
+        plundarrgh: 11,
+        minimiku: 12,
+        snail: 13,
+        transpondersnail: 13,
+        sweetdreams: 14,
+        zee: 15,
+    };
+    for (const [family, idx] of Object.entries(manualOrder)) {
+        map.set(family, idx);
+    }
+    return map;
+}
+
 function sortSprites(items, method) {
     const sorted = [...items];
+    const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
+    const familyOrder = getFamilyOrderMap();
+
     if (method === 'theme') {
         return sorted.sort((a, b) => {
             if (state.filters.season === 'all') {
-                const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
-                const idxA = seasonOrder.indexOf(a.season);
-                const idxB = seasonOrder.indexOf(b.season);
-                const cmp = (idxA === -1 ? Infinity : idxA) - (idxB === -1 ? Infinity : idxB);
-                if (cmp !== 0) return cmp;
+                const seasonA = seasonOrder.indexOf(a.season);
+                const seasonB = seasonOrder.indexOf(b.season);
+                const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
+                if (seasonCmp !== 0) return seasonCmp;
             }
             const idxA = getOrderedIndex(THEME_ORDER, a.theme);
             const idxB = getOrderedIndex(THEME_ORDER, b.theme);
             if (idxA !== idxB) return idxA - idxB;
             const rarityIdxA = getOrderedIndex(RARITY_ORDER, a.rarity);
             const rarityIdxB = getOrderedIndex(RARITY_ORDER, b.rarity);
-            return rarityIdxA - rarityIdxB;
+            if (rarityIdxA !== rarityIdxB) return rarityIdxA - rarityIdxB;
+            const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
+            const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
         });
     }
     if (method === 'sprite') {
-        const familyOrder = new Map();
-        baseSprites.forEach((sprite, idx) => {
-            const family = getFamilyKey(sprite);
-            if (!familyOrder.has(family)) familyOrder.set(family, idx);
-        });
-        // Manual ordering for newly added sprites
-        if (familyOrder.has('transpondersnail') && !familyOrder.has('minimiku')) {
-            familyOrder.set('minimiku', familyOrder.get('transpondersnail') - 1);
-        }
-        if (!familyOrder.has('zee')) {
-            familyOrder.set('zee', Infinity);
-        }
         return sorted.sort((a, b) => {
-            const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
             const seasonA = seasonOrder.indexOf(a.season);
             const seasonB = seasonOrder.indexOf(b.season);
             const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
@@ -991,7 +1018,6 @@ function sortSprites(items, method) {
         });
     }
     if (method === 'name') {
-        const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
         return sorted.sort((a, b) => {
             if (state.filters.season === 'all') {
                 const seasonA = seasonOrder.indexOf(a.season);
@@ -1003,20 +1029,27 @@ function sortSprites(items, method) {
             const baseNameB = getCharName(getFamilyKey(b));
             const cmp = baseNameA.localeCompare(baseNameB);
             if (cmp !== 0) return cmp;
+            const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
+            const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
+            if (orderA !== orderB) return orderA - orderB;
             return getOrderedIndex(THEME_ORDER, a.theme) - getOrderedIndex(THEME_ORDER, b.theme);
         });
     }
     if (method === 'rarity') {
-        const seasonOrder = ['Runners', 'Override', 'Treasure Hunters'];
-        const familyOrder = new Map();
-        baseSprites.forEach((sprite, idx) => {
-            const family = getFamilyKey(sprite);
-            if (!familyOrder.has(family)) familyOrder.set(family, idx);
-        });
         return sorted.sort((a, b) => {
-            const idxA = getOrderedIndex(RARITY_ORDER, a.rarity);
-            const idxB = getOrderedIndex(RARITY_ORDER, b.rarity);
+            // Snail sorts as Mythic for ordering but keeps Legendary rarity label
+            const aSnail = getFamilyKey(a) === 'transpondersnail' || getFamilyKey(a) === 'snail';
+            const bSnail = getFamilyKey(b) === 'transpondersnail' || getFamilyKey(b) === 'snail';
+            const rarityA = aSnail ? 'Mythic' : a.rarity;
+            const rarityB = bSnail ? 'Mythic' : b.rarity;
+            const idxA = getOrderedIndex(RARITY_ORDER, rarityA);
+            const idxB = getOrderedIndex(RARITY_ORDER, rarityB);
             if (idxA !== idxB) return idxA - idxB;
+            if (a.rarity === 'Epic' && b.rarity === 'Epic') {
+                const aSquid = getFamilyKey(a) === 'squiplash';
+                const bSquid = getFamilyKey(b) === 'squiplash';
+                if (aSquid !== bSquid) return aSquid ? 1 : -1;
+            }
             const seasonA = seasonOrder.indexOf(a.season);
             const seasonB = seasonOrder.indexOf(b.season);
             const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
