@@ -999,12 +999,12 @@ function sortSprites(items, method) {
             const idxA = getOrderedIndex(THEME_ORDER, a.theme);
             const idxB = getOrderedIndex(THEME_ORDER, b.theme);
             if (idxA !== idxB) return idxA - idxB;
-            const rarityIdxA = getOrderedIndex(RARITY_ORDER, a.rarity);
-            const rarityIdxB = getOrderedIndex(RARITY_ORDER, b.rarity);
-            if (rarityIdxA !== rarityIdxB) return rarityIdxA - rarityIdxB;
             const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
             const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
             if (orderA !== orderB) return orderA - orderB;
+            const rarityIdxA = getOrderedIndex(RARITY_ORDER, a.rarity);
+            const rarityIdxB = getOrderedIndex(RARITY_ORDER, b.rarity);
+            if (rarityIdxA !== rarityIdxB) return rarityIdxA - rarityIdxB;
             return a.name.localeCompare(b.name);
         });
     }
