@@ -473,14 +473,14 @@ async function fetchSpriteChecklistSprites(url) {
         throw new Error('Incomplete sprite list (' + sprites.length + '): ' + (warnings.join('; ') || 'missing seasons'));
     }
     const manualSprites = [
-        { id: 'minimiku_basic', name: 'Mini Miku', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'minimiku_fortune', name: 'Mini Miku', theme: 'Fortune', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'minimiku_cursed', name: 'Mini Miku', theme: 'Cursed', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'zee_secret', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'siteimages/staticsprite.png' },
-        { id: 'sweetdreams_secret', name: 'Sweet Dreams', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'siteimages/staticsprite.png' },
+        { id: 'minimiku_basic', name: 'Mini Miku', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/basic_miku.webp' },
+        { id: 'minimiku_fortune', name: 'Mini Miku', theme: 'Fortune', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/fortune_miku.webp' },
+        { id: 'minimiku_cursed', name: 'Mini Miku', theme: 'Cursed', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/cursed_miku.webp' },
+        { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/basic_squiplash.webp' },
+        { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/fortune_squiplash.webp' },
+        { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/cused_squiplash.webp' },
+        { id: 'zee_secret', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'spriteimages/zee.webp' },
+        { id: 'sweetdreams_secret', name: 'Sweet Dreams', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'https://spritechecklist.org/sprites/th_sweetdreams_basic.webp' },
     ];
     for (const ms of manualSprites) sprites.push(ms);
 
