@@ -26,13 +26,13 @@ const SPRITE_LIST_UPDATED_KEY = 'fn_sprite_list_updated';
 const SPRITE_LIST_API_KEY_KEY = 'fn_sprite_list_api_key';
 let spriteListInitialized = false;
 
-const THEME_ORDER = ['Basic', 'Gold', 'Candy', 'Galaxy', 'Gem', 'Holofoil', 'Cube', 'Rift', 'Quack', 'Cheat', 'Hacker', 'Bounty', 'Reaper', 'Tricktreat', 'Fortune', 'Cursed'];
+const THEME_ORDER = ['Basic', 'Secret', 'Gold', 'Candy', 'Galaxy', 'Gem', 'Holofoil', 'Cube', 'Rift', 'Quack', 'Cheat', 'Hacker', 'Bounty', 'Reaper', 'Tricktreat', 'Fortune', 'Cursed'];
 const RARITY_ORDER = ['Rare', 'Epic', 'Legendary', 'Mythic'];
 const STATUS_FILTERS = ['all', 'owned', 'missing'];
 const SORT_METHODS = ['theme', 'sprite', 'name', 'rarity'];
-const UI_THEME_LABELS = { Candy: 'Gummy', Cheat: 'Cheat Master', Hacker: 'Loot Hacker', Bounty: 'Bounty Hunter', Reaper: 'Reaper', Tricktreat: 'Trick or Treat' };
-const EXPORT_THEME_LABELS = { Basic: 'NORMAL', Candy: 'GUMMY', Hacker: 'LOOT HACKER', Bounty: 'BOUNTY HUNTER', Reaper: 'REAPER', Tricktreat: 'TRICK OR TREAT' };
-const TRADE_THEME_LABELS = { Basic: 'Base', Candy: 'Gummy', Hacker: 'Loot Hacker', Bounty: 'Bounty Hunter', Reaper: 'Reaper', Tricktreat: 'Trick or Treat' };
+const UI_THEME_LABELS = { Candy: 'Gummy', Cheat: 'Cheat Master', Hacker: 'Loot Hacker', Bounty: 'Bounty Hunter', Reaper: 'Reaper', Tricktreat: 'Trick or Treat', Secret: 'Secret' };
+const EXPORT_THEME_LABELS = { Basic: 'NORMAL', Candy: 'GUMMY', Hacker: 'LOOT HACKER', Bounty: 'BOUNTY HUNTER', Reaper: 'REAPER', Tricktreat: 'TRICK OR TREAT', Secret: 'SECRET' };
+const TRADE_THEME_LABELS = { Basic: 'Base', Candy: 'Gummy', Hacker: 'Loot Hacker', Bounty: 'Bounty Hunter', Reaper: 'Reaper', Tricktreat: 'Trick or Treat', Secret: 'Secret' };
 const TRACKER_URL = 'https://alex347xd.github.io/Sprite-Tracker/';
 const CROWN_ICON = '<svg class="crown-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 19h20v2H2v-2zM2 5l5 3.5L12 2l5 6.5L22 5v12H2V5z"/></svg>';
 
@@ -386,12 +386,12 @@ async function fetchSpriteChecklistSprites(url) {
     const themeMap = {
         Basic: 'Basic', Gold: 'Gold', Candy: 'Candy', Galaxy: 'Galaxy', Gem: 'Gem',
         Holofoil: 'Holofoil', Quack: 'Quack', CheatMaster: 'Cheat', LootHacker: 'Hacker',
-        BountyHunter: 'Bounty', TrickOrTreat: 'Tricktreat', Fortune: 'Fortune', Cursed: 'Cursed',
+        BountyHunter: 'Bounty', TrickOrTreat: 'Tricktreat', Fortune: 'Fortune', Cursed: 'Cursed', Secret: 'Secret',
         Cube: 'Cube', Rift: 'Rift',
     };
     const idSuffixMap = {
         Basic: 'basic', Gold: 'gold', Candy: 'candy', Galaxy: 'galaxy', Gem: 'gem',
-        Holofoil: 'holofoil', Cube: 'rift', Rift: 'rift', Quack: 'quack',
+        Holofoil: 'holofoil', Cube: 'rift', Rift: 'rift', Quack: 'quack', Secret: 'secret',
         Cheat: 'cheat', Hacker: 'hacker', Bounty: 'bounty', Reaper: 'reaper',
         Tricktreat: 'treat', Fortune: 'fortune', Cursed: 'cursed',
     };
@@ -478,11 +478,15 @@ async function fetchSpriteChecklistSprites(url) {
         { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'zee_basic', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'zee_secret', name: 'Zee', theme: 'Secret', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'sweetdreams_secret', name: 'Sweet Dreams', theme: 'Secret', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
     ];
     for (const ms of manualSprites) sprites.push(ms);
 
-    const normalized = normalizeSpriteList(sprites);
+    // Remove basic versions of sprites that only have a Secret variant
+    const filtered = sprites.filter(s => s.id !== 'sweetdreams_basic' && s.id !== 'zee_basic');
+
+    const normalized = normalizeSpriteList(filtered);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
     return normalized;
 }
@@ -1341,6 +1345,7 @@ function getRarityTagColors(rarity) {
 function getThemeLabelColor(theme) {
     const map = {
         Basic: '#334155',
+        Secret: '#8b00ff',
         Gold: '#855f10',
         Candy: '#942157',
         Galaxy: '#321c73',
