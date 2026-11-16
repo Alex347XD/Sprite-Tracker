@@ -254,6 +254,7 @@ function normalizeSpriteList(data) {
             code: item.code === true,
             codeLocked: typeof item.codeLocked === 'boolean' ? item.codeLocked : undefined,
             cheatCodeExempt: item.cheatCodeExempt === true,
+            secret: item.secret === true,
             image: typeof item.image === 'string' && item.image.trim() ? item.image.trim() : undefined,
         });
     }
@@ -478,8 +479,8 @@ async function fetchSpriteChecklistSprites(url) {
         { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
         { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'zee_secret', name: 'Zee', theme: 'Secret', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
-        { id: 'sweetdreams_secret', name: 'Sweet Dreams', theme: 'Secret', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'siteimages/staticsprite.png' },
+        { id: 'zee_secret', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'siteimages/staticsprite.png' },
+        { id: 'sweetdreams_secret', name: 'Sweet Dreams', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'siteimages/staticsprite.png' },
     ];
     for (const ms of manualSprites) sprites.push(ms);
 
@@ -1131,6 +1132,7 @@ function renderGrid() {
         card.dataset.id = sprite.id;
 
         const classes = ['card', `rarity-${sprite.rarity}`, `theme-${sprite.theme}`];
+        if (sprite.secret) classes.push('secret');
         if (obtained) classes.push('obtained');
         if (mastered) classes.push('mastered');
         card.className = classes.join(' ');
@@ -1202,7 +1204,8 @@ function buildCardHTML(sprite, obtained, mastered) {
     const imgPath = sprite.image || `sprites/${encodeURIComponent(sprite.id)}.png`;
     const safeName = escapeHTML(sprite.name);
     const safeTagText = escapeHTML(tagText);
-    const themeLabel = escapeHTML(`${getUiThemeLabel(sprite.theme)} Sprite`.toUpperCase());
+    const displayTheme = sprite.secret ? 'Secret' : sprite.theme;
+    const themeLabel = escapeHTML(`${getUiThemeLabel(displayTheme)} Sprite`.toUpperCase());
 
     let badge = '';
     if (sprite.unreleased) {
@@ -1465,7 +1468,7 @@ function drawMiniCard(ctx, sprite, x, y, width, height, cardState, imageMap) {
 
     const [bgTop, bgBottom] = getRarityGradient(rarity);
     const [tagBg, tagTextColor] = getRarityTagColors(rarity);
-    const themeLabelColor = getThemeLabelColor(theme);
+    const themeLabelColor = sprite.secret ? '#1a1a1a' : getThemeLabelColor(theme);
 
     const themeLabelH = 12;
     const barHeight = 34;
@@ -1495,7 +1498,9 @@ function drawMiniCard(ctx, sprite, x, y, width, height, cardState, imageMap) {
     ctx.font = 'bold 8px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${getUiThemeLabel(theme)} Sprite`.toUpperCase(), x + width / 2, y + themeLabelH / 2 + 0.5);
+    const displayTheme = sprite.secret ? 'Secret' : theme;
+    const exportThemeLabel = sprite.secret ? 'Secret' : theme;
+    ctx.fillText(`${getUiThemeLabel(exportThemeLabel)} Sprite`.toUpperCase(), x + width / 2, y + themeLabelH / 2 + 0.5);
 
     // Card background gradient, based purely on rarity (matches on-screen .card-display background)
     const grad = ctx.createLinearGradient(x, imageAreaY, x, imageAreaY + imageAreaH);
@@ -1637,6 +1642,12 @@ function drawMiniCard(ctx, sprite, x, y, width, height, cardState, imageMap) {
     }
     if (naturalBadge && naturalBadge.width) {
         ctx.drawImage(naturalBadge, badgeX, badgeY, 12, 12);
+    }
+
+    if (sprite.secret) {
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1.5, imageAreaY + 1.5, width - 3, imageAreaH - 3);
     }
 
     ctx.restore();
