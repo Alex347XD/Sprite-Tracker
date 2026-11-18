@@ -358,6 +358,26 @@ async function fetchSpriteChecklistSprites(url) {
     }
     if (!bundle.includes('hs=[')) throw new Error('Sprite data not found');
 
+    // Dynamically resolve theme-list variables in the bundle so updates that
+    // rename them don't break parsing.
+    const themeVarMap = {};
+    const themeVarRegex = /([A-Za-z_$][\w$]*)=\[([^\[\]]*)\]/g;
+    let tm;
+    while ((tm = themeVarRegex.exec(bundle)) !== null) {
+        const name = tm[1];
+        const expr = '[' + tm[2] + ']';
+        try {
+            const keys = Object.keys(themeVarMap);
+            const fn = new Function(...keys, 'return ' + expr);
+            const val = fn(...keys.map(k => themeVarMap[k]));
+            if (Array.isArray(val) && val.length && val.every(x => typeof x === 'string')) {
+                themeVarMap[name] = val;
+            }
+        } catch (e) {
+            // ignore unresolvable expressions
+        }
+    }
+
     const seasonIdToName = {
         c7s3: 'Runners',
         c7s4: 'Override',
@@ -381,8 +401,6 @@ async function fetchSpriteChecklistSprites(url) {
         if (sidMatch) varToSeasonId[varName] = sidMatch[1];
     }
     const arrayVars = [...new Set([...bundle.matchAll(/\b([a-zA-Z_$][\w$]*)=\[{id:"/g)].map(m => m[1]))];
-
-    const overrideThemes = ['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack'];
 
     const themeMap = {
         Basic: 'Basic', Gold: 'Gold', Candy: 'Candy', Galaxy: 'Galaxy', Gem: 'Gem',
@@ -423,15 +441,13 @@ async function fetchSpriteChecklistSprites(url) {
 
         const cleaned = arrTextRaw
             .replace(/\.\.\.[A-Za-z_$][\w$]*,?/g, '')
-            .replace(/\breleasedThemes:de\b/g, 'releasedThemes:' + JSON.stringify(overrideThemes))
-            .replace(/\bthemes:de\b/g, 'themes:' + JSON.stringify(overrideThemes))
-            .replace(/\breleasedThemes:z\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
-            .replace(/\breleasedThemes:he\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack']))
-            .replace(/\bthemes:he\b/g, 'themes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat', 'Quack']))
-            .replace(/\breleasedThemes:q\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Gold', 'CheatMaster', 'LootHacker', 'BountyHunter', 'TrickOrTreat']))
-            .replace(/\breleasedThemes:ie\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
-            .replace(/\bthemes:Da\b/g, 'themes:' + JSON.stringify(['Basic', 'Fortune', 'Cursed']))
-            .replace(/\breleasedThemes:cs\b/g, 'releasedThemes:' + JSON.stringify(['Basic', 'Fortune']));
+            .replace(/\b(releasedThemes|themes):([A-Za-z_$][\w$]*)\b/g, (match, prop, varName) => {
+                const val = themeVarMap[varName];
+                if (Array.isArray(val)) {
+                    return prop + ':' + JSON.stringify(val);
+                }
+                return match;
+            });
 
         let entries;
         try {
@@ -472,22 +488,13 @@ async function fetchSpriteChecklistSprites(url) {
     if (sprites.length < 200) {
         throw new Error('Incomplete sprite list (' + sprites.length + '): ' + (warnings.join('; ') || 'missing seasons'));
     }
-    const manualSprites = [
-        { id: 'minimiku_basic', name: 'Mini Miku', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/basic_miku.webp' },
-        { id: 'minimiku_fortune', name: 'Mini Miku', theme: 'Fortune', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/fortune_miku.webp' },
-        { id: 'minimiku_cursed', name: 'Mini Miku', theme: 'Cursed', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/cursed_miku.webp' },
-        { id: 'squiplash_basic', name: 'Squiplash', theme: 'Basic', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/basic_squiplash.webp' },
-        { id: 'squiplash_fortune', name: 'Squiplash', theme: 'Fortune', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/fortune_squiplash.webp' },
-        { id: 'squiplash_cursed', name: 'Squiplash', theme: 'Cursed', rarity: 'Epic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, image: 'spriteimages/cused_squiplash.webp' },
-        { id: 'zee_secret', name: 'Zee', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'spriteimages/zee.webp' },
-        { id: 'sweetdreams_secret', name: 'Sweet Dreams', theme: 'Basic', rarity: 'Mythic', unreleased: false, season: 'Treasure Hunters', code: false, cheatCodeExempt: false, secret: true, image: 'https://spritechecklist.org/sprites/th_sweetdreams_basic.webp' },
-    ];
-    for (const ms of manualSprites) sprites.push(ms);
+    for (const s of sprites) {
+        if (s.id.startsWith('sweetdreams_') || s.id.startsWith('zee_')) {
+            s.secret = true;
+        }
+    }
 
-    // Remove basic versions of sprites that only have a Secret variant
-    const filtered = sprites.filter(s => s.id !== 'sweetdreams_basic' && s.id !== 'zee_basic');
-
-    const normalized = normalizeSpriteList(filtered);
+    const normalized = normalizeSpriteList(sprites);
     if (!normalized) throw new Error('No sprites found on spritechecklist.org');
     return normalized;
 }
@@ -973,7 +980,6 @@ function getFamilyOrderMap() {
         plundarrgh: 11,
         minimiku: 12,
         snail: 13,
-        transpondersnail: 13,
         sweetdreams: 14,
         zee: 15,
     };
