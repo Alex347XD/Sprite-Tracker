@@ -962,29 +962,9 @@ function getFamilyOrderMap() {
         const family = getFamilyKey(sprite);
         if (!map.has(family)) map.set(family, idx);
     });
-    const manualOrder = {
-        halfpeel: 0,
-        repete: 1,
-        barryofish: 2,
-        wayfinder: 3,
-        chester: 4,
-        kelper: 5,
-        exmarks: 6,
-        squibbly: 7,
-        lilsquibbly: 7,
-        squiplash: 8,
-        flacko: 9,
-        lilflacko: 9,
-        liluzivertjr: 10,
-        uzi: 10,
-        plundarrgh: 11,
-        minimiku: 12,
-        snail: 13,
-        sweetdreams: 14,
-        zee: 15,
-    };
-    for (const [family, idx] of Object.entries(manualOrder)) {
-        map.set(family, idx);
+    // Keep Snail right after Mini Miku
+    if (map.has('minimiku') && map.has('snail')) {
+        map.set('snail', map.get('minimiku') + 1);
     }
     return map;
 }
