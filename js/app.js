@@ -16,7 +16,7 @@ const KEYS = {
     season: 'fn_state_season',
 };
 
-const ORIGINAL_BASE_SPRITES = (typeof baseSprites !== 'undefined' && Array.isArray(baseSprites)) ? baseSprites.slice() : [];
+let ORIGINAL_BASE_SPRITES = [];
 const SPRITE_LIST_URL_KEY = 'fn_sprite_list_url';
 const SPRITE_LIST_AUTO_KEY = 'fn_sprite_list_auto';
 const SPRITE_LIST_CACHE_KEY = 'fn_sprite_list_cache_v2';
@@ -2574,6 +2574,9 @@ async function init() {
         state.mastered = decoded.mastered;
         state.naturalBadges = decoded.naturalBadges || [];
         state.wonBadges = decoded.wonBadges || [];
+        document.title = 'Shared Collection - Alex\'s Tracker';
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) ogTitle.setAttribute('content', 'Shared Collection - Alex\'s Tracker');
         if (dom.viewBanner) dom.viewBanner.hidden = false;
     } else {
         load();
@@ -2599,6 +2602,7 @@ async function init() {
     syncSpriteListSettingsUI();
 }
 
+ORIGINAL_BASE_SPRITES = Array.isArray(baseSprites) ? baseSprites.slice() : [];
 init().catch(err => {
     console.error(err);
 });
