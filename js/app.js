@@ -742,6 +742,15 @@ function getFamilyKey(sprite) {
     return sprite.id.split('_')[0];
 }
 
+function getFamilyKeys(sprites = getReleasedSprites()) {
+    const keys = [];
+    for (const sprite of sprites) {
+        const key = getFamilyKey(sprite);
+        if (!keys.includes(key)) keys.push(key);
+    }
+    return keys;
+}
+
 const EXTRA_VALID_SPRITE_IDS = new Set([
     'earth_rift', 'fire_rift', 'fishy_rift', 'dream_rift', 'punk_rift',
     'boss_rift', 'grim_rift', 'batman_rift', 'zeropoint_rift',
@@ -2084,14 +2093,16 @@ function closeDropdowns() {
 
 function copyText(text, successMsg, errorMsg) {
     if (!navigator.clipboard?.writeText) {
-        toast(errorMsg, 'error');
+        fallbackCopy(text);
+        toast(successMsg, 'success');
         return;
     }
 
     navigator.clipboard.writeText(text).then(() => {
         toast(successMsg, 'success');
     }).catch(() => {
-        toast(errorMsg, 'error');
+        fallbackCopy(text);
+        toast(successMsg, 'success');
     });
 }
 
@@ -2436,12 +2447,22 @@ function bindEvents() {
 
 
     dom.copyTradeTextBtn.addEventListener('click', () => {
-        copyText(generateTradeText(), 'Trade list copied to clipboard!', 'Failed to copy trade list');
+        try {
+            copyText(generateTradeText(), 'Trade list copied to clipboard!', 'Failed to copy trade list');
+        } catch (err) {
+            console.error(err);
+            toast('Trade list failed: ' + err.message, 'error');
+        }
         setDropdownOpen(dom.copyDropdown, dom.copyToggle, false);
     });
 
     dom.copyTradeGridBtn.addEventListener('click', () => {
-        copyText(generateTradeGridText(), 'Trade grid copied to clipboard!', 'Failed to copy trade grid');
+        try {
+            copyText(generateTradeGridText(), 'Trade grid copied to clipboard!', 'Failed to copy trade grid');
+        } catch (err) {
+            console.error(err);
+            toast('Trade grid failed: ' + err.message, 'error');
+        }
         setDropdownOpen(dom.copyDropdown, dom.copyToggle, false);
     });
 }
