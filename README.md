@@ -12,3 +12,5 @@ A browser-based tracker for the Fortnite Sprites collection. Track which sprites
 - Share view-only collection links
 - Per-sprite badge tracking (natural/won)
 - Auto-updating sprite list from spritechecklist.org
+
+Credit goes to rickventure.com for the original tracker.
