@@ -4005,5 +4005,49 @@ let baseSprites = [
         "code": false,
         "cheatCodeExempt": false,
         "image": "https://spritechecklist.org/sprites/th_squiplash_gold.webp"
+    },
+    {
+        "id": "siroscarthesecond_basic",
+        "name": "Sir Oscar the Second",
+        "theme": "Basic",
+        "rarity": "Legendary",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_siroscarthesecond_basic.webp"
+    },
+    {
+        "id": "siroscarthesecond_fortune",
+        "name": "Sir Oscar the Second",
+        "theme": "Fortune",
+        "rarity": "Legendary",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_siroscarthesecond_fortune.webp"
+    },
+    {
+        "id": "siroscarthesecond_cursed",
+        "name": "Sir Oscar the Second",
+        "theme": "Cursed",
+        "rarity": "Legendary",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_siroscarthesecond_cursed.webp"
+    },
+    {
+        "id": "siroscarthesecond_gold",
+        "name": "Sir Oscar the Second",
+        "theme": "Gold",
+        "rarity": "Legendary",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_siroscarthesecond_gold.webp"
     }
 ];
