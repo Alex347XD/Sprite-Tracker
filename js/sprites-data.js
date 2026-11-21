@@ -3862,5 +3862,148 @@ let baseSprites = [
         "cheatCodeExempt": false,
         "secret": true,
         "image": "https://spritechecklist.org/sprites/th_zee_basic.webp"
+    },
+    {
+        "id": "halfpeel_gold",
+        "name": "Halfpeel'd",
+        "theme": "Gold",
+        "rarity": "Rare",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_halfpeel_gold.webp"
+    },
+    {
+        "id": "repete_gold",
+        "name": "Re-Pete",
+        "theme": "Gold",
+        "rarity": "Rare",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_repete_gold.webp"
+    },
+    {
+        "id": "barryofish_gold",
+        "name": "Barry O'Fish",
+        "theme": "Gold",
+        "rarity": "Rare",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_barryofish_gold.webp"
+    },
+    {
+        "id": "wayfinder_gold",
+        "name": "Wayfinder",
+        "theme": "Gold",
+        "rarity": "Rare",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_wayfinder_gold.webp"
+    },
+    {
+        "id": "chester_gold",
+        "name": "Chester",
+        "theme": "Gold",
+        "rarity": "Epic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_chester_gold.webp"
+    },
+    {
+        "id": "kelper_gold",
+        "name": "Kelper",
+        "theme": "Gold",
+        "rarity": "Epic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_kelper_gold.webp"
+    },
+    {
+        "id": "exmarks_gold",
+        "name": "Exmarks",
+        "theme": "Gold",
+        "rarity": "Epic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_exmarks_gold.webp"
+    },
+    {
+        "id": "squibbly_gold",
+        "name": "Lil' Squibbly",
+        "theme": "Gold",
+        "rarity": "Epic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_squibbly_gold.webp"
+    },
+    {
+        "id": "lilflacko_gold",
+        "name": "Lil' Flacko",
+        "theme": "Gold",
+        "rarity": "Legendary",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_lilflacko_gold.webp"
+    },
+    {
+        "id": "liluzivertjr_gold",
+        "name": "Lil' Uzi Vert Jr.",
+        "theme": "Gold",
+        "rarity": "Legendary",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_liluzivertjr_gold.webp"
+    },
+    {
+        "id": "plundarrgh_gold",
+        "name": "Plundarrgh",
+        "theme": "Gold",
+        "rarity": "Mythic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_plundarrgh_gold.webp"
+    },
+    {
+        "id": "minimiku_gold",
+        "name": "Mini Miku",
+        "theme": "Gold",
+        "rarity": "Mythic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_minimiku_gold.webp"
+    },
+    {
+        "id": "squiplash_gold",
+        "name": "Squiplash",
+        "theme": "Gold",
+        "rarity": "Epic",
+        "unreleased": false,
+        "season": "Treasure Hunters",
+        "code": false,
+        "cheatCodeExempt": false,
+        "image": "https://spritechecklist.org/sprites/th_squiplash_gold.webp"
     }
 ];
