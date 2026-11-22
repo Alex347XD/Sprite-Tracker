@@ -815,13 +815,21 @@ function getExportableSprites() {
     return getReleasedSprites();
 }
 
+function getThemeOrder(season = state.filters.season) {
+    if (season === 'Treasure Hunters') {
+        return ['Basic', 'Secret', 'Fortune', 'Cursed', 'Gold', 'Candy', 'Galaxy', 'Gem', 'Holofoil', 'Cube', 'Rift', 'Quack', 'Cheat', 'Hacker', 'Bounty', 'Reaper', 'Tricktreat'];
+    }
+    return THEME_ORDER;
+}
+
 function getActiveThemes(sprites = getReleasedSprites()) {
+    const themeOrder = getThemeOrder(state.filters.season);
     return sprites
         .reduce((themes, sprite) => {
             if (!themes.includes(sprite.theme)) themes.push(sprite.theme);
             return themes;
         }, [])
-        .sort((a, b) => getOrderedIndex(THEME_ORDER, a) - getOrderedIndex(THEME_ORDER, b));
+        .sort((a, b) => getOrderedIndex(themeOrder, a) - getOrderedIndex(themeOrder, b));
 }
 
 function getOrderedIndex(order, value) {
@@ -991,8 +999,8 @@ function sortSprites(items, method) {
                 const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
                 if (seasonCmp !== 0) return seasonCmp;
             }
-            const idxA = getOrderedIndex(THEME_ORDER, a.theme);
-            const idxB = getOrderedIndex(THEME_ORDER, b.theme);
+            const idxA = getOrderedIndex(getThemeOrder(state.filters.season), a.theme);
+            const idxB = getOrderedIndex(getThemeOrder(state.filters.season), b.theme);
             if (idxA !== idxB) return idxA - idxB;
             const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
             const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
@@ -1014,7 +1022,7 @@ function sortSprites(items, method) {
             const orderA = familyOrder.has(familyA) ? familyOrder.get(familyA) : Infinity;
             const orderB = familyOrder.has(familyB) ? familyOrder.get(familyB) : Infinity;
             if (orderA !== orderB) return orderA - orderB;
-            return getOrderedIndex(THEME_ORDER, a.theme) - getOrderedIndex(THEME_ORDER, b.theme);
+            return getOrderedIndex(getThemeOrder(state.filters.season), a.theme) - getOrderedIndex(getThemeOrder(state.filters.season), b.theme);
         });
     }
     if (method === 'name') {
@@ -1032,7 +1040,7 @@ function sortSprites(items, method) {
             const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
             const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
             if (orderA !== orderB) return orderA - orderB;
-            return getOrderedIndex(THEME_ORDER, a.theme) - getOrderedIndex(THEME_ORDER, b.theme);
+            return getOrderedIndex(getThemeOrder(state.filters.season), a.theme) - getOrderedIndex(getThemeOrder(state.filters.season), b.theme);
         });
     }
     if (method === 'rarity') {
@@ -1054,8 +1062,8 @@ function sortSprites(items, method) {
             const seasonB = seasonOrder.indexOf(b.season);
             const seasonCmp = (seasonA === -1 ? Infinity : seasonA) - (seasonB === -1 ? Infinity : seasonB);
             if (seasonCmp !== 0) return seasonCmp;
-            const themeIdxA = getOrderedIndex(THEME_ORDER, a.theme);
-            const themeIdxB = getOrderedIndex(THEME_ORDER, b.theme);
+            const themeIdxA = getOrderedIndex(getThemeOrder(state.filters.season), a.theme);
+            const themeIdxB = getOrderedIndex(getThemeOrder(state.filters.season), b.theme);
             if (themeIdxA !== themeIdxB) return themeIdxA - themeIdxB;
             const orderA = familyOrder.has(getFamilyKey(a)) ? familyOrder.get(getFamilyKey(a)) : Infinity;
             const orderB = familyOrder.has(getFamilyKey(b)) ? familyOrder.get(getFamilyKey(b)) : Infinity;
